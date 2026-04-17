@@ -1,0 +1,175 @@
+---
+sidebar_position: 1
+title: "Introducción a JavaScript"
+---
+
+# 🚀 Introducción a JavaScript
+
+## ¿Qué es JavaScript?
+
+JavaScript (JS) es un **lenguaje de programación interpretado**, dinámico y multiparadigma. Es uno de los tres pilares del desarrollo web junto con HTML y CSS.
+
+| Tecnología | Rol |
+|-----------|-----|
+| **HTML** | Estructura (esqueleto) |
+| **CSS** | Estilos (apariencia) |
+| **JavaScript** | Comportamiento (interacción) |
+
+Hoy en día, JavaScript se usa **en todas partes**:
+- 🌐 **Frontend** — React, Vue, Angular
+- 🖥️ **Backend** — Node.js, Deno, Bun
+- 📱 **Mobile** — React Native, Ionic
+- 🎮 **Videojuegos** — Phaser, Three.js
+- 🤖 **IA/ML** — TensorFlow.js
+
+---
+
+## Breve historia
+
+| Año | Evento |
+|-----|--------|
+| 1995 | Brendan Eich crea JavaScript en **10 días** en Netscape |
+| 1997 | Se estandariza como **ECMAScript (ES)** |
+| 2009 | Nace **Node.js** → JS en el servidor |
+| 2015 | **ES6/ES2015** → revolución del lenguaje (`let`, `const`, arrow functions, clases) |
+| 2024+ | JS sigue evolucionando con nuevas features anuales |
+
+---
+
+## ¿Cómo ejecutar JavaScript?
+
+### 1. En el navegador (DevTools)
+
+Abre la consola del navegador con `F12` o `Ctrl + Shift + J`:
+
+```javascript
+console.log("¡Hola desde el navegador! 🌍");
+```
+
+### 2. Con Node.js
+
+Instala [Node.js](https://nodejs.org) y ejecuta desde la terminal:
+
+```bash
+node mi_archivo.js
+```
+
+### 3. Desde un archivo HTML
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mi primer JS</title>
+</head>
+<body>
+  <h1>Hola Mundo</h1>
+  <script>
+    console.log("¡JavaScript funcionando! ✅");
+    alert("¡Bienvenido!");
+  </script>
+</body>
+</html>
+```
+
+---
+
+## `console.log()` — Tu mejor amigo
+
+`console.log()` imprime mensajes en la consola del navegador o terminal. Es la forma principal de **depurar** (debug) tu código.
+
+```javascript
+// Imprimir texto
+console.log("Hola mundo");
+
+// Imprimir números
+console.log(42);
+
+// Imprimir múltiples valores
+console.log("Nombre:", "Samuel", "Edad:", 25);
+
+// Otros métodos útiles de console
+console.warn("⚠️ Esto es una advertencia");
+console.error("❌ Esto es un error");
+console.table([
+  { nombre: "JS", tipo: "lenguaje" },
+  { nombre: "React", tipo: "librería" },
+]);
+```
+
+---
+
+## Comentarios
+
+Los comentarios son texto que JavaScript **ignora**. Sirven para documentar tu código:
+
+```javascript
+// Esto es un comentario de una línea
+
+/*
+  Esto es un comentario
+  de múltiples líneas
+*/
+
+// ✅ Buena práctica: comentar el POR QUÉ, no el QUÉ
+// Reintentamos 3 veces porque la API a veces falla en el primer intento
+const MAX_RETRIES = 3;
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Hola Mundo
+Escribe un programa que imprima `"¡Hola Mundo!"` en la consola.
+
+### Ejercicio 2 — Presentación
+Imprime en consola tu nombre, edad y lenguaje favorito, cada uno en una línea diferente.
+
+### Ejercicio 3 — Tabla
+Usa `console.table()` para mostrar un array con 3 objetos que representen tus 3 comidas favoritas con las propiedades `nombre` y `tipo`.
+
+### Ejercicio 4 — Archivo HTML
+Crea un archivo HTML que muestre un `alert()` con tu nombre y además imprima un mensaje en la consola.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+console.log("¡Hola Mundo!");
+```
+
+#### Ejercicio 2
+```javascript
+console.log("Nombre: Samuel");
+console.log("Edad: 25");
+console.log("Lenguaje favorito: JavaScript");
+```
+
+#### Ejercicio 3
+```javascript
+console.table([
+  { nombre: "Pizza", tipo: "italiana" },
+  { nombre: "Tacos", tipo: "mexicana" },
+  { nombre: "Sushi", tipo: "japonesa" },
+]);
+```
+
+#### Ejercicio 4
+```html
+<!DOCTYPE html>
+<html>
+<head><title>Mi presentación</title></head>
+<body>
+  <script>
+    alert("¡Hola, soy Samuel!");
+    console.log("Página cargada correctamente ✅");
+  </script>
+</body>
+</html>
+```
+
+</details>

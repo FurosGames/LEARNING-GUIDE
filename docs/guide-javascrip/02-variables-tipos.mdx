@@ -1,0 +1,284 @@
+---
+sidebar_position: 2
+title: "Variables y Tipos de Datos"
+---
+
+# 📦 Variables y Tipos de Datos
+
+## ¿Qué es una variable?
+
+Una variable es un **contenedor con nombre** que almacena un valor en la memoria. Piensa en ella como una caja etiquetada donde guardas datos.
+
+---
+
+## Declaración de variables
+
+JavaScript tiene 3 formas de declarar variables:
+
+### `var` (antigua — evitar ❌)
+
+```javascript
+var nombre = "Samuel";
+var nombre = "Otro"; // ⚠️ Permite redeclaración
+```
+
+### `let` (moderna — usar para valores que cambian ✅)
+
+```javascript
+let edad = 25;
+edad = 26; // ✅ Se puede reasignar
+// let edad = 30; // ❌ Error: no se puede redeclarar
+```
+
+### `const` (moderna — usar por defecto ✅✅)
+
+```javascript
+const PI = 3.14159;
+// PI = 3.14; // ❌ Error: no se puede reasignar
+
+const usuario = { nombre: "Samuel" };
+usuario.nombre = "Juan"; // ✅ Se puede mutar el contenido del objeto
+```
+
+:::tip Regla de oro
+Usa **`const`** siempre que puedas. Solo usa **`let`** cuando necesites reasignar el valor. **Nunca** uses `var`.
+:::
+
+---
+
+## Comparación `var` vs `let` vs `const`
+
+| Característica | `var` | `let` | `const` |
+|----------------|-------|-------|---------|
+| Scope | Función | Bloque | Bloque |
+| Redeclaración | ✅ | ❌ | ❌ |
+| Reasignación | ✅ | ✅ | ❌ |
+| Hoisting | Sí (undefined) | Sí (TDZ) | Sí (TDZ) |
+| ¿Usar? | ❌ Nunca | ✅ A veces | ✅✅ Siempre |
+
+---
+
+## Tipos de datos primitivos
+
+JavaScript tiene **7 tipos primitivos**:
+
+```javascript
+// 1. String (cadena de texto)
+const nombre = "JavaScript";
+const saludo = 'Hola';
+const template = `Hola, ${nombre}`; // Template literal
+
+// 2. Number (números enteros y decimales)
+const entero = 42;
+const decimal = 3.14;
+const negativo = -10;
+const infinito = Infinity;
+const noEsNumero = NaN; // Not a Number
+
+// 3. Boolean (verdadero o falso)
+const esActivo = true;
+const estaBloqueado = false;
+
+// 4. Undefined (variable declarada sin valor)
+let sinValor;
+console.log(sinValor); // undefined
+
+// 5. Null (ausencia intencional de valor)
+const vacio = null;
+
+// 6. BigInt (números enormes)
+const grande = 9007199254740991n;
+const otroBigInt = BigInt("123456789012345678901234567890");
+
+// 7. Symbol (identificador único)
+const id = Symbol("id");
+const otroId = Symbol("id");
+console.log(id === otroId); // false — cada Symbol es único
+```
+
+---
+
+## Tipos de datos NO primitivos
+
+```javascript
+// Object (objeto)
+const persona = {
+  nombre: "Samuel",
+  edad: 25,
+};
+
+// Array (arreglo — es un tipo especial de objeto)
+const frutas = ["🍎", "🍌", "🍊"];
+
+// Function (función — también es un objeto)
+const saludar = function () {
+  return "Hola!";
+};
+```
+
+---
+
+## `typeof` — Verificar el tipo
+
+```javascript
+console.log(typeof "hola");       // "string"
+console.log(typeof 42);           // "number"
+console.log(typeof true);         // "boolean"
+console.log(typeof undefined);    // "undefined"
+console.log(typeof null);         // "object"  ⚠️ Bug histórico de JS
+console.log(typeof {});           // "object"
+console.log(typeof []);           // "object"  ⚠️ Usa Array.isArray()
+console.log(typeof function(){}); // "function"
+console.log(typeof Symbol());     // "symbol"
+console.log(typeof 42n);          // "bigint"
+```
+
+:::caution Cuidado con null y arrays
+`typeof null` devuelve `"object"` — es un bug de JS desde 1995 que nunca se corrigió.
+Para verificar arrays usa `Array.isArray([1,2,3])` → `true`.
+:::
+
+---
+
+## Conversión de tipos (Type Coercion)
+
+JavaScript convierte tipos automáticamente, lo que puede causar resultados inesperados:
+
+```javascript
+// Coerción implícita (automática)
+console.log("5" + 3);    // "53" — concatena (string gana)
+console.log("5" - 3);    // 2   — resta (convierte a number)
+console.log("5" * "2");  // 10  — multiplica
+console.log(true + 1);   // 2   — true = 1
+console.log(false + 1);  // 1   — false = 0
+console.log("" == false); // true ⚠️
+
+// Coerción explícita (manual) ✅
+console.log(Number("42"));      // 42
+console.log(String(42));        // "42"
+console.log(Boolean(1));        // true
+console.log(Boolean(0));        // false
+console.log(Boolean(""));       // false
+console.log(Boolean("hola"));   // true
+console.log(parseInt("42px"));  // 42
+console.log(parseFloat("3.14")); // 3.14
+```
+
+---
+
+## Valores Falsy y Truthy
+
+```javascript
+// Valores FALSY (se evalúan como false)
+// false, 0, -0, 0n, "", null, undefined, NaN
+
+// Valores TRUTHY (todo lo demás)
+// "0", "false", [], {}, function(){}, 42, -1, Infinity
+
+if ("") console.log("No se imprime");     // falsy
+if ("hola") console.log("Sí se imprime"); // truthy
+if (0) console.log("No se imprime");      // falsy
+if ([]) console.log("Sí se imprime");     // truthy ⚠️ array vacío es truthy
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Declarar variables
+Declara variables para almacenar: tu nombre (string), tu edad (number), si eres estudiante (boolean). Imprime cada una con su tipo usando `typeof`.
+
+### Ejercicio 2 — ¿Qué imprime?
+Sin ejecutar el código, predice qué imprime cada línea:
+```javascript
+console.log(typeof null);
+console.log(typeof [1, 2, 3]);
+console.log("10" + 5);
+console.log("10" - 5);
+console.log(true + true);
+```
+
+### Ejercicio 3 — Conversión manual
+Convierte los siguientes valores a `Number`, `String` y `Boolean`. Imprime los resultados:
+- `"123"`
+- `0`
+- `null`
+- `""`
+
+### Ejercicio 4 — Template literals
+Crea variables para `nombre`, `edad` y `profesion`. Luego usa un template literal para imprimir: `"Hola, soy [nombre], tengo [edad] años y soy [profesion]"`.
+
+### Ejercicio 5 — Falsy check
+Escribe una función `esFalsy(valor)` que reciba un valor y retorne `true` si es falsy o `false` si es truthy. Pruébala con: `0`, `""`, `null`, `"hola"`, `[]`.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+const nombre = "Samuel";
+const edad = 25;
+const esEstudiante = true;
+
+console.log(nombre, typeof nombre);       // "Samuel" "string"
+console.log(edad, typeof edad);           // 25 "number"
+console.log(esEstudiante, typeof esEstudiante); // true "boolean"
+```
+
+#### Ejercicio 2
+```javascript
+console.log(typeof null);        // "object"
+console.log(typeof [1, 2, 3]);   // "object"
+console.log("10" + 5);           // "105"
+console.log("10" - 5);           // 5
+console.log(true + true);        // 2
+```
+
+#### Ejercicio 3
+```javascript
+// "123"
+console.log(Number("123"));   // 123
+console.log(String("123"));   // "123"
+console.log(Boolean("123"));  // true
+
+// 0
+console.log(Number(0));    // 0
+console.log(String(0));    // "0"
+console.log(Boolean(0));   // false
+
+// null
+console.log(Number(null));   // 0
+console.log(String(null));   // "null"
+console.log(Boolean(null));  // false
+
+// ""
+console.log(Number(""));    // 0
+console.log(String(""));    // ""
+console.log(Boolean(""));   // false
+```
+
+#### Ejercicio 4
+```javascript
+const nombre = "Samuel";
+const edad = 25;
+const profesion = "desarrollador";
+
+console.log(`Hola, soy ${nombre}, tengo ${edad} años y soy ${profesion}`);
+```
+
+#### Ejercicio 5
+```javascript
+function esFalsy(valor) {
+  return !valor;
+}
+
+console.log(esFalsy(0));       // true
+console.log(esFalsy(""));      // true
+console.log(esFalsy(null));    // true
+console.log(esFalsy("hola"));  // false
+console.log(esFalsy([]));      // false
+```
+
+</details>

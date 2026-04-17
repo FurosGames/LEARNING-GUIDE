@@ -1,0 +1,318 @@
+---
+sidebar_position: 8
+title: "Manipulación del DOM"
+---
+
+# 🌐 Manipulación del DOM
+
+El **DOM (Document Object Model)** es la representación en forma de árbol de un documento HTML. JavaScript puede leer, modificar, agregar y eliminar elementos del DOM.
+
+---
+
+## Seleccionar elementos
+
+```javascript
+// Por ID — retorna UN elemento
+const titulo = document.getElementById("titulo");
+
+// Por clase — retorna HTMLCollection (viva)
+const items = document.getElementsByClassName("item");
+
+// querySelector — retorna el PRIMER match (CSS selector)
+const boton = document.querySelector(".btn-primary");
+const input = document.querySelector('input[type="email"]');
+
+// querySelectorAll — retorna NodeList (estática) con TODOS los matches
+const cards = document.querySelectorAll(".card");
+```
+
+:::tip Recomendación
+Usa **`querySelector`** y **`querySelectorAll`** siempre. Son más flexibles y aceptan cualquier selector CSS.
+:::
+
+---
+
+## Modificar contenido
+
+```javascript
+const elemento = document.querySelector("#mi-elemento");
+
+// textContent — Solo texto (más seguro)
+elemento.textContent = "Hola Mundo";
+
+// innerHTML — HTML (⚠️ cuidado con XSS)
+elemento.innerHTML = "<strong>Hola</strong> Mundo";
+
+// innerText — Texto visible (respeta estilos CSS)
+console.log(elemento.innerText);
+```
+
+---
+
+## Modificar estilos
+
+```javascript
+const box = document.querySelector(".box");
+
+// Estilos inline individuales
+box.style.backgroundColor = "#3b82f6";
+box.style.padding = "20px";
+box.style.borderRadius = "8px";
+box.style.color = "white";
+
+// Múltiples estilos con cssText
+box.style.cssText = `
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 20px;
+  border-radius: 12px;
+`;
+
+// Clases CSS (preferible ✅)
+box.classList.add("activo");
+box.classList.remove("inactivo");
+box.classList.toggle("visible");       // Agrega si no existe, quita si existe
+box.classList.contains("activo");      // true/false
+box.classList.replace("viejo", "nuevo");
+```
+
+---
+
+## Modificar atributos
+
+```javascript
+const link = document.querySelector("a");
+
+// getAttribute / setAttribute
+link.setAttribute("href", "https://developer.mozilla.org");
+console.log(link.getAttribute("href"));
+
+// Propiedades directas (más fácil)
+link.href = "https://javascript.info";
+link.target = "_blank";
+link.id = "mi-link";
+
+// data-* attributes
+const card = document.querySelector(".card");
+card.dataset.userId = "123";       // <div data-user-id="123">
+console.log(card.dataset.userId);  // "123"
+
+// Eliminar atributo
+link.removeAttribute("target");
+```
+
+---
+
+## Crear y agregar elementos
+
+```javascript
+// Crear elemento
+const nuevoDiv = document.createElement("div");
+nuevoDiv.textContent = "Soy nuevo!";
+nuevoDiv.className = "card";
+nuevoDiv.id = "nueva-card";
+
+// Agregar al DOM
+document.body.appendChild(nuevoDiv);                // Al final del body
+document.body.prepend(nuevoDiv);                    // Al inicio del body
+document.querySelector(".container").append(nuevoDiv); // Al final del container
+
+// insertAdjacentHTML — Insertar HTML en posición específica
+const lista = document.querySelector("ul");
+lista.insertAdjacentHTML("beforeend", "<li>Nuevo item</li>");
+// Posiciones: "beforebegin", "afterbegin", "beforeend", "afterend"
+
+// Crear múltiples elementos eficientemente con DocumentFragment
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 100; i++) {
+  const li = document.createElement("li");
+  li.textContent = `Item ${i + 1}`;
+  fragment.appendChild(li);
+}
+document.querySelector("ul").appendChild(fragment); // Un solo reflow
+```
+
+---
+
+## Eliminar elementos
+
+```javascript
+// remove() — moderno ✅
+const elemento = document.querySelector("#eliminar");
+elemento.remove();
+
+// removeChild() — antiguo
+const padre = document.querySelector(".lista");
+const hijo = padre.querySelector("li:last-child");
+padre.removeChild(hijo);
+```
+
+---
+
+## Eventos
+
+```javascript
+const boton = document.querySelector("#mi-boton");
+
+// addEventListener (recomendado ✅)
+boton.addEventListener("click", (event) => {
+  console.log("¡Click!", event.target);
+});
+
+// Eventos comunes
+boton.addEventListener("click", manejarClick);
+boton.addEventListener("dblclick", manejarDobleClick);
+input.addEventListener("input", (e) => console.log(e.target.value)); // Cada tecla
+input.addEventListener("change", manejarCambio);  // Al perder foco
+document.addEventListener("keydown", (e) => {
+  console.log(`Tecla: ${e.key}, Código: ${e.code}`);
+  if (e.key === "Escape") cerrarModal();
+  if (e.ctrlKey && e.key === "s") {
+    e.preventDefault(); // Evitar guardar del navegador
+    guardarDatos();
+  }
+});
+form.addEventListener("submit", (e) => {
+  e.preventDefault(); // Evitar recarga de página
+  const datos = new FormData(form);
+});
+
+// Remover evento
+boton.removeEventListener("click", manejarClick);
+```
+
+---
+
+## Delegación de eventos
+
+En vez de agregar un evento a cada elemento hijo, agrega **uno al padre**:
+
+```javascript
+// ❌ Ineficiente: un listener por cada item
+document.querySelectorAll("li").forEach(li => {
+  li.addEventListener("click", () => console.log(li.textContent));
+});
+
+// ✅ Eficiente: un listener en el padre
+document.querySelector("ul").addEventListener("click", (e) => {
+  if (e.target.tagName === "LI") {
+    console.log("Clickeaste:", e.target.textContent);
+  }
+});
+
+// Ventaja: funciona incluso con elementos agregados dinámicamente
+```
+
+:::tip ¿Por qué delegación de eventos?
+1. **Rendimiento** — Un solo listener vs cientos
+2. **Dinámico** — Funciona con elementos creados después
+3. **Menos memoria** — Menos referencias en memoria
+:::
+
+---
+
+## `dataset` — Almacenar datos en el DOM
+
+```javascript
+// HTML: <button data-action="delete" data-item-id="42">Eliminar</button>
+
+document.querySelector("[data-action]").addEventListener("click", (e) => {
+  const action = e.target.dataset.action;   // "delete"
+  const itemId = e.target.dataset.itemId;   // "42"
+
+  if (action === "delete") {
+    eliminarItem(itemId);
+  }
+});
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Toggle de tema
+Crea un botón que al hacer click alterne entre tema claro y oscuro, cambiando una clase `dark` en el `body`.
+
+### Ejercicio 2 — Lista dinámica
+Crea un input y un botón. Al hacer click, agrega el texto del input como un nuevo `<li>` a una lista `<ul>`. Limpia el input después.
+
+### Ejercicio 3 — Delegación
+Usando delegación de eventos en un `<ul>`, haz que al hacer click en cualquier `<li>`, se elimine ese item de la lista.
+
+### Ejercicio 4 — Contador
+Crea un contador con 3 botones: `-`, valor actual, `+`. El valor debe actualizarse en el DOM cada vez que se hace click.
+
+### Ejercicio 5 — Filtro de búsqueda
+Crea un input de búsqueda que filtre en tiempo real una lista de items. Al escribir, solo deben mostrarse los items que contengan el texto escrito.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+const toggleBtn = document.querySelector("#toggle-tema");
+toggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  toggleBtn.textContent = document.body.classList.contains("dark")
+    ? "☀️ Modo Claro"
+    : "🌙 Modo Oscuro";
+});
+```
+
+#### Ejercicio 2
+```javascript
+const input = document.querySelector("#nuevo-item");
+const boton = document.querySelector("#agregar-btn");
+const lista = document.querySelector("#mi-lista");
+
+boton.addEventListener("click", () => {
+  const texto = input.value.trim();
+  if (texto) {
+    const li = document.createElement("li");
+    li.textContent = texto;
+    lista.appendChild(li);
+    input.value = "";
+    input.focus();
+  }
+});
+```
+
+#### Ejercicio 3
+```javascript
+const lista = document.querySelector("ul");
+lista.addEventListener("click", (e) => {
+  if (e.target.tagName === "LI") {
+    e.target.remove();
+  }
+});
+```
+
+#### Ejercicio 4
+```javascript
+let count = 0;
+const display = document.querySelector("#contador-valor");
+const btnMenos = document.querySelector("#btn-menos");
+const btnMas = document.querySelector("#btn-mas");
+
+const actualizar = () => { display.textContent = count; };
+
+btnMenos.addEventListener("click", () => { count--; actualizar(); });
+btnMas.addEventListener("click", () => { count++; actualizar(); });
+```
+
+#### Ejercicio 5
+```javascript
+const searchInput = document.querySelector("#buscar");
+const items = document.querySelectorAll(".item");
+
+searchInput.addEventListener("input", (e) => {
+  const query = e.target.value.toLowerCase();
+  items.forEach(item => {
+    const match = item.textContent.toLowerCase().includes(query);
+    item.style.display = match ? "" : "none";
+  });
+});
+```
+
+</details>

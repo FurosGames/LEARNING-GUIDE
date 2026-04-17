@@ -1,0 +1,393 @@
+---
+sidebar_position: 9
+title: "Asincronía: Promises y Async/Await"
+---
+
+# ⏳ Asincronía: Promises y Async/Await
+
+JavaScript es **single-threaded** (un solo hilo) pero puede ejecutar operaciones asíncronas sin bloquear la ejecución gracias al **Event Loop**.
+
+---
+
+## ¿Qué es la asincronía?
+
+```javascript
+console.log("1 — Inicio");
+
+setTimeout(() => {
+  console.log("2 — Esto tarda 2 segundos");
+}, 2000);
+
+console.log("3 — Fin");
+
+// Resultado:
+// 1 — Inicio
+// 3 — Fin
+// 2 — Esto tarda 2 segundos (después de 2s)
+```
+
+JavaScript **no espera** a que termine el `setTimeout`. Continúa con la siguiente línea y el callback se ejecuta después.
+
+---
+
+## Callbacks (el inicio)
+
+```javascript
+function obtenerDatos(callback) {
+  setTimeout(() => {
+    const datos = { nombre: "Samuel", edad: 25 };
+    callback(datos);
+  }, 1000);
+}
+
+obtenerDatos((datos) => {
+  console.log("Datos recibidos:", datos);
+});
+
+// ⚠️ Callback Hell (pirámide de la muerte)
+obtenerUsuario((usuario) => {
+  obtenerPosts(usuario.id, (posts) => {
+    obtenerComentarios(posts[0].id, (comentarios) => {
+      // ...esto se vuelve inmanejable
+    });
+  });
+});
+```
+
+---
+
+## Promises (la solución)
+
+Una **Promise** es un objeto que representa el resultado futuro de una operación asíncrona.
+
+```javascript
+// Crear una Promise
+const miPromesa = new Promise((resolve, reject) => {
+  const exito = true;
+
+  setTimeout(() => {
+    if (exito) {
+      resolve({ mensaje: "¡Datos obtenidos!" }); // ✅ Éxito
+    } else {
+      reject(new Error("Algo salió mal"));         // ❌ Error
+    }
+  }, 1000);
+});
+
+// Consumir una Promise
+miPromesa
+  .then((resultado) => {
+    console.log("Éxito:", resultado.mensaje);
+  })
+  .catch((error) => {
+    console.error("Error:", error.message);
+  })
+  .finally(() => {
+    console.log("Siempre se ejecuta (éxito o error)");
+  });
+```
+
+### Estados de una Promise
+
+| Estado | Descripción |
+|--------|------------|
+| **pending** | Esperando (ni resuelta ni rechazada) |
+| **fulfilled** | Resuelta con éxito → `.then()` |
+| **rejected** | Rechazada con error → `.catch()` |
+
+---
+
+## Encadenas Promises (Chaining)
+
+```javascript
+function obtenerUsuario(id) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ id, nombre: "Samuel" }), 500);
+  });
+}
+
+function obtenerPosts(userId) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve([
+      { id: 1, titulo: "Post 1" },
+      { id: 2, titulo: "Post 2" },
+    ]), 500);
+  });
+}
+
+// ✅ Chaining — mucho mejor que callbacks anidados
+obtenerUsuario(1)
+  .then(usuario => {
+    console.log("Usuario:", usuario.nombre);
+    return obtenerPosts(usuario.id);
+  })
+  .then(posts => {
+    console.log("Posts:", posts);
+  })
+  .catch(error => {
+    console.error("Error:", error);
+  });
+```
+
+---
+
+## `async/await` — La forma moderna ✅
+
+`async/await` hace que el código asíncrono **se lea como síncrono**:
+
+```javascript
+async function cargarPerfil() {
+  try {
+    const usuario = await obtenerUsuario(1);
+    console.log("Usuario:", usuario.nombre);
+
+    const posts = await obtenerPosts(usuario.id);
+    console.log("Posts:", posts);
+
+    return { usuario, posts };
+  } catch (error) {
+    console.error("Error:", error.message);
+  } finally {
+    console.log("Carga finalizada");
+  }
+}
+
+cargarPerfil();
+```
+
+:::tip Recuerda
+- `async` hace que una función **siempre retorne una Promise**
+- `await` **pausa** la ejecución hasta que la Promise se resuelva
+- `await` solo puede usarse dentro de funciones `async`
+:::
+
+---
+
+## `fetch` — Peticiones HTTP
+
+```javascript
+// GET — Obtener datos
+async function obtenerUsuarios() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/users");
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const usuarios = await response.json();
+    console.log(usuarios);
+    return usuarios;
+  } catch (error) {
+    console.error("Error al obtener usuarios:", error.message);
+  }
+}
+
+// POST — Enviar datos
+async function crearPost(titulo, body) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title: titulo, body, userId: 1 }),
+    });
+
+    const nuevoPost = await response.json();
+    console.log("Creado:", nuevoPost);
+  } catch (error) {
+    console.error("Error:", error.message);
+  }
+}
+
+// DELETE
+async function eliminarPost(id) {
+  await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+    method: "DELETE",
+  });
+  console.log(`Post ${id} eliminado`);
+}
+```
+
+---
+
+## Promise.all, Promise.race, Promise.allSettled
+
+```javascript
+const p1 = fetch("/api/users").then(r => r.json());
+const p2 = fetch("/api/posts").then(r => r.json());
+const p3 = fetch("/api/comments").then(r => r.json());
+
+// Promise.all — Espera que TODAS se resuelvan (falla si una falla)
+const [users, posts, comments] = await Promise.all([p1, p2, p3]);
+
+// Promise.race — Retorna la PRIMERA que se resuelva o rechace
+const primerResultado = await Promise.race([p1, p2, p3]);
+
+// Promise.allSettled — Espera TODAS, no falla si alguna falla
+const resultados = await Promise.allSettled([p1, p2, p3]);
+resultados.forEach(r => {
+  if (r.status === "fulfilled") {
+    console.log("Éxito:", r.value);
+  } else {
+    console.log("Error:", r.reason);
+  }
+});
+
+// Promise.any — Retorna la primera que se RESUELVA (ignora rechazos)
+const primeraExitosa = await Promise.any([p1, p2, p3]);
+```
+
+---
+
+## Patrones comunes
+
+```javascript
+// Retry con backoff
+async function fetchConRetry(url, intentos = 3) {
+  for (let i = 0; i < intentos; i++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Status: ${res.status}`);
+      return await res.json();
+    } catch (error) {
+      console.warn(`Intento ${i + 1} falló:`, error.message);
+      if (i === intentos - 1) throw error;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1))); // Backoff
+    }
+  }
+}
+
+// Timeout para fetch
+async function fetchConTimeout(url, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    return await res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Promise básica
+Crea una función `esperar(ms)` que retorne una Promise que se resuelva después de `ms` milisegundos. Úsala con `await`.
+
+### Ejercicio 2 — Fetch de usuarios
+Usa `fetch` con async/await para obtener usuarios de `https://jsonplaceholder.typicode.com/users`. Imprime solo los nombres.
+
+### Ejercicio 3 — Promise.all
+Haz 3 peticiones simultáneas con `Promise.all` a: `/users`, `/posts`, `/todos` de jsonplaceholder. Imprime cuántos elementos tiene cada respuesta.
+
+### Ejercicio 4 — Manejo de errores
+Crea una función que haga fetch a una URL inexistente y maneje el error correctamente con try/catch, mostrando un mensaje amigable.
+
+### Ejercicio 5 — Secuencial vs paralelo
+Obtén los datos de 5 usuarios (IDs 1-5) de dos formas: secuencial (uno tras otro) y paralela (todos a la vez). Mide el tiempo con `console.time()`.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+function esperar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function main() {
+  console.log("Inicio");
+  await esperar(2000);
+  console.log("2 segundos después");
+}
+main();
+```
+
+#### Ejercicio 2
+```javascript
+async function obtenerNombres() {
+  try {
+    const res = await fetch("https://jsonplaceholder.typicode.com/users");
+    const usuarios = await res.json();
+    const nombres = usuarios.map(u => u.name);
+    console.log(nombres);
+  } catch (error) {
+    console.error("Error:", error.message);
+  }
+}
+obtenerNombres();
+```
+
+#### Ejercicio 3
+```javascript
+async function cargarTodo() {
+  const base = "https://jsonplaceholder.typicode.com";
+
+  const [users, posts, todos] = await Promise.all([
+    fetch(`${base}/users`).then(r => r.json()),
+    fetch(`${base}/posts`).then(r => r.json()),
+    fetch(`${base}/todos`).then(r => r.json()),
+  ]);
+
+  console.log(`Users: ${users.length}`);  // 10
+  console.log(`Posts: ${posts.length}`);   // 100
+  console.log(`Todos: ${todos.length}`);   // 200
+}
+cargarTodo();
+```
+
+#### Ejercicio 4
+```javascript
+async function fetchSeguro() {
+  try {
+    const res = await fetch("https://url-que-no-existe.com/api");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.error("No se pudieron cargar los datos.");
+    console.error("Detalle:", error.message);
+    return null;
+  }
+}
+fetchSeguro();
+```
+
+#### Ejercicio 5
+```javascript
+const base = "https://jsonplaceholder.typicode.com/users";
+
+// Secuencial
+async function secuencial() {
+  console.time("Secuencial");
+  for (let id = 1; id <= 5; id++) {
+    const res = await fetch(`${base}/${id}`);
+    const user = await res.json();
+    console.log(user.name);
+  }
+  console.timeEnd("Secuencial"); // ~2500ms
+}
+
+// Paralelo
+async function paralelo() {
+  console.time("Paralelo");
+  const promesas = [1, 2, 3, 4, 5].map(id =>
+    fetch(`${base}/${id}`).then(r => r.json())
+  );
+  const usuarios = await Promise.all(promesas);
+  usuarios.forEach(u => console.log(u.name));
+  console.timeEnd("Paralelo"); // ~500ms
+}
+
+secuencial();
+// paralelo();
+```
+
+</details>

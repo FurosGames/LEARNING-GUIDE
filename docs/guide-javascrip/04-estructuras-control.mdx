@@ -1,0 +1,306 @@
+---
+sidebar_position: 4
+title: "Estructuras de Control"
+---
+
+# 🔀 Estructuras de Control
+
+Las estructuras de control determinan **qué código se ejecuta** y **cuántas veces**.
+
+---
+
+## Condicional `if / else if / else`
+
+```javascript
+const temperatura = 35;
+
+if (temperatura > 30) {
+  console.log("🔥 Hace mucho calor");
+} else if (temperatura > 20) {
+  console.log("☀️ Clima agradable");
+} else if (temperatura > 10) {
+  console.log("🧥 Hace frío");
+} else {
+  console.log("🥶 ¡Congelando!");
+}
+```
+
+### If en una línea (sin llaves)
+
+```javascript
+// Solo para expresiones simples
+if (edad >= 18) console.log("Mayor de edad");
+
+// ⚠️ Cuidado: sin llaves solo se ejecuta la siguiente línea
+if (false)
+  console.log("No se imprime");
+  console.log("¡Esto SÍ se imprime!"); // No pertenece al if
+```
+
+:::caution
+Siempre usa llaves `{}` para evitar bugs sutiles. Incluso si es una sola línea.
+:::
+
+---
+
+## `switch`
+
+Ideal cuando comparas una variable contra **múltiples valores fijos**:
+
+```javascript
+const dia = "lunes";
+
+switch (dia) {
+  case "lunes":
+  case "martes":
+  case "miércoles":
+  case "jueves":
+  case "viernes":
+    console.log("📋 Día laboral");
+    break;
+  case "sábado":
+  case "domingo":
+    console.log("🎉 Fin de semana");
+    break;
+  default:
+    console.log("❓ Día no válido");
+}
+```
+
+:::warning ¡No olvides el `break`!
+Sin `break`, la ejecución "cae" al siguiente `case` (fall-through), lo cual puede causar bugs.
+:::
+
+---
+
+## Bucle `for`
+
+El bucle más clásico. Tiene 3 partes: **inicialización**, **condición** y **actualización**.
+
+```javascript
+// Contar del 1 al 5
+for (let i = 1; i <= 5; i++) {
+  console.log(`Iteración ${i}`);
+}
+
+// Contar hacia atrás
+for (let i = 10; i >= 0; i--) {
+  console.log(i);
+}
+
+// Iterar un array por índice
+const frutas = ["🍎", "🍌", "🍊"];
+for (let i = 0; i < frutas.length; i++) {
+  console.log(`${i}: ${frutas[i]}`);
+}
+```
+
+---
+
+## Bucle `while`
+
+Se ejecuta **mientras la condición sea true**. Útil cuando no sabes cuántas iteraciones necesitas:
+
+```javascript
+let intentos = 0;
+
+while (intentos < 3) {
+  console.log(`Intento ${intentos + 1}`);
+  intentos++;
+}
+
+// Ejemplo: encontrar un número aleatorio > 0.9
+let numero;
+let iteraciones = 0;
+while (true) {
+  numero = Math.random();
+  iteraciones++;
+  if (numero > 0.9) break; // sale del bucle
+}
+console.log(`Encontrado ${numero} en ${iteraciones} iteraciones`);
+```
+
+---
+
+## Bucle `do...while`
+
+Igual que `while`, pero **siempre se ejecuta al menos una vez**:
+
+```javascript
+let input;
+do {
+  input = prompt("Escribe 'salir' para terminar:");
+  console.log(`Escribiste: ${input}`);
+} while (input !== "salir");
+```
+
+---
+
+## `for...of` — Iterar valores
+
+Itera sobre los **valores** de cualquier iterable (arrays, strings, Maps, Sets):
+
+```javascript
+const colores = ["rojo", "verde", "azul"];
+
+for (const color of colores) {
+  console.log(color);
+}
+// rojo, verde, azul
+
+// Iterar un string
+for (const letra of "Hola") {
+  console.log(letra); // H, o, l, a
+}
+
+// Con index usando entries()
+for (const [index, color] of colores.entries()) {
+  console.log(`${index}: ${color}`);
+}
+```
+
+---
+
+## `for...in` — Iterar propiedades de un objeto
+
+Itera sobre las **claves (keys)** de un objeto:
+
+```javascript
+const persona = {
+  nombre: "Samuel",
+  edad: 25,
+  ciudad: "CDMX",
+};
+
+for (const key in persona) {
+  console.log(`${key}: ${persona[key]}`);
+}
+// nombre: Samuel
+// edad: 25
+// ciudad: CDMX
+```
+
+:::warning No uses `for...in` con arrays
+`for...in` itera sobre propiedades, no sobre índices. Para arrays, usa `for...of` o `.forEach()`.
+:::
+
+---
+
+## `break` y `continue`
+
+```javascript
+// break — Sale del bucle completamente
+for (let i = 0; i < 10; i++) {
+  if (i === 5) break;
+  console.log(i); // 0, 1, 2, 3, 4
+}
+
+// continue — Salta a la siguiente iteración
+for (let i = 0; i < 10; i++) {
+  if (i % 2 === 0) continue; // Salta los pares
+  console.log(i); // 1, 3, 5, 7, 9
+}
+
+// Label + break — Sale de bucles anidados
+bucleExterno:
+for (let i = 0; i < 3; i++) {
+  for (let j = 0; j < 3; j++) {
+    if (i === 1 && j === 1) break bucleExterno;
+    console.log(`${i},${j}`);
+  }
+}
+// 0,0  0,1  0,2  1,0
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — FizzBuzz
+Imprime los números del 1 al 30. Para múltiplos de 3 imprime `"Fizz"`, para múltiplos de 5 imprime `"Buzz"`, para múltiplos de ambos imprime `"FizzBuzz"`.
+
+### Ejercicio 2 — Pirámide
+Usa un bucle `for` para imprimir esta pirámide:
+```
+*
+**
+***
+****
+*****
+```
+
+### Ejercicio 3 — Suma de pares
+Calcula la suma de todos los números pares del 1 al 100 usando un bucle.
+
+### Ejercicio 4 — Día de la semana
+Usa `switch` para recibir un número del 1 al 7 y devolver el nombre del día. Si el número no es válido, imprime un error.
+
+### Ejercicio 5 — Buscar en array
+Dado un array de nombres, usa `for...of` para encontrar e imprimir el primer nombre que tenga más de 6 letras. Usa `break` para detenerte al encontrarlo.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+for (let i = 1; i <= 30; i++) {
+  if (i % 3 === 0 && i % 5 === 0) {
+    console.log("FizzBuzz");
+  } else if (i % 3 === 0) {
+    console.log("Fizz");
+  } else if (i % 5 === 0) {
+    console.log("Buzz");
+  } else {
+    console.log(i);
+  }
+}
+```
+
+#### Ejercicio 2
+```javascript
+for (let i = 1; i <= 5; i++) {
+  console.log("*".repeat(i));
+}
+```
+
+#### Ejercicio 3
+```javascript
+let suma = 0;
+for (let i = 2; i <= 100; i += 2) {
+  suma += i;
+}
+console.log(`Suma de pares: ${suma}`); // 2550
+```
+
+#### Ejercicio 4
+```javascript
+const num = 3;
+
+switch (num) {
+  case 1: console.log("Lunes"); break;
+  case 2: console.log("Martes"); break;
+  case 3: console.log("Miércoles"); break;
+  case 4: console.log("Jueves"); break;
+  case 5: console.log("Viernes"); break;
+  case 6: console.log("Sábado"); break;
+  case 7: console.log("Domingo"); break;
+  default: console.log("Número no válido");
+}
+```
+
+#### Ejercicio 5
+```javascript
+const nombres = ["Ana", "Luis", "Fernando", "María", "Alejandro"];
+
+for (const nombre of nombres) {
+  if (nombre.length > 6) {
+    console.log(`Encontrado: ${nombre}`);
+    break;
+  }
+}
+// "Encontrado: Fernando"
+```
+
+</details>

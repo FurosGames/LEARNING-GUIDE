@@ -1,0 +1,614 @@
+---
+sidebar_position: 15
+title: "Tips Profesionales para el Día a Día"
+---
+
+# 💼 Tips Profesionales para el Día a Día
+
+Técnicas, herramientas y buenas prácticas que los desarrolladores profesionales usan **a diario**.
+
+---
+
+## 🧹 Clean Code en JavaScript
+
+### Nombres descriptivos
+
+```javascript
+// ❌ Malo
+const d = new Date();
+const arr = users.filter(u => u.a);
+function calc(x, y) { return x * y * 1.16; }
+
+// ✅ Bueno
+const currentDate = new Date();
+const activeUsers = users.filter(user => user.isActive);
+function calcPriceWithTax(price, quantity) {
+  return price * quantity * 1.16;
+}
+```
+
+### Early returns (Guard Clauses)
+
+```javascript
+// ❌ Anidado y difícil de leer
+function processOrder(order) {
+  if (order) {
+    if (order.items.length > 0) {
+      if (order.paymentMethod) {
+        // ...lógica principal
+        return result;
+      } else {
+        throw new Error("Sin método de pago");
+      }
+    } else {
+      throw new Error("Sin items");
+    }
+  } else {
+    throw new Error("Sin orden");
+  }
+}
+
+// ✅ Guard clauses — limpio y plano
+function processOrder(order) {
+  if (!order) throw new Error("Sin orden");
+  if (order.items.length === 0) throw new Error("Sin items");
+  if (!order.paymentMethod) throw new Error("Sin método de pago");
+
+  // ...lógica principal (sin anidación)
+  return result;
+}
+```
+
+### Objetos en vez de múltiples parámetros
+
+```javascript
+// ❌ ¿Qué significan estos parámetros?
+createUser("Samuel", "samuel@mail.com", 25, true, false, "admin");
+
+// ✅ Un objeto con nombres claros
+createUser({
+  nombre: "Samuel",
+  email: "samuel@mail.com",
+  edad: 25,
+  activo: true,
+  verificado: false,
+  rol: "admin",
+});
+```
+
+---
+
+## 🔍 Debugging profesional
+
+```javascript
+// Más allá de console.log()
+
+// console.table — Datos tabulares
+console.table([
+  { nombre: "Samuel", edad: 25 },
+  { nombre: "Ana", edad: 30 }
+]);
+
+// console.group — Agrupar logs
+console.group("🔄 Procesando pedido #123");
+console.log("Validando datos...");
+console.log("Calculando total...");
+console.log("Generando factura...");
+console.groupEnd();
+
+// console.time — Medir rendimiento
+console.time("fetch-usuarios");
+const users = await fetch("/api/users").then(r => r.json());
+console.timeEnd("fetch-usuarios"); // "fetch-usuarios: 234.5ms"
+
+// console.count — Contar ejecuciones
+function onClick() {
+  console.count("click"); // click: 1, click: 2, click: 3...
+}
+
+// console.assert — Solo logea si la condición es falsa
+console.assert(users.length > 0, "¡No hay usuarios!");
+
+// console.trace — Ver stack de llamadas
+function a() { b(); }
+function b() { c(); }
+function c() { console.trace("Llegué aquí"); }
+a(); // Muestra: c → b → a
+
+// Debugger statement
+function calcularDescuento(precio, tipo) {
+  debugger; // Pausa la ejecución aquí (si DevTools está abierto)
+  return precio * factores[tipo];
+}
+```
+
+---
+
+## ⚡ Performance Tips
+
+### Evitar manipulación excesiva del DOM
+
+```javascript
+// ❌ Cada iteración toca el DOM — 1000 reflows
+for (let i = 0; i < 1000; i++) {
+  document.body.innerHTML += `<p>Item ${i}</p>`;
+}
+
+// ✅ Construir fuera del DOM y insertar una vez
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 1000; i++) {
+  const p = document.createElement("p");
+  p.textContent = `Item ${i}`;
+  fragment.appendChild(p);
+}
+document.body.appendChild(fragment);
+
+// ✅✅ O con innerHTML de un solo golpe
+document.body.innerHTML = Array.from({ length: 1000 },
+  (_, i) => `<p>Item ${i}</p>`
+).join("");
+```
+
+### Lazy Loading
+
+```javascript
+// Imágenes
+// <img loading="lazy" src="imagen-pesada.jpg" alt="..." />
+
+// Módulos
+const modulo = await import("./componente-pesado.js");
+
+// Intersection Observer para cargar al ser visible
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.src = entry.target.dataset.src;
+      observer.unobserve(entry.target);
+    }
+  });
+});
+
+document.querySelectorAll("img[data-src]").forEach(img => observer.observe(img));
+```
+
+---
+
+## 🛠️ Utilidades modernas (ES2020+)
+
+### Optional Chaining + Nullish Coalescing
+
+```javascript
+// Antes (verboso)
+const city = user && user.address && user.address.city
+  ? user.address.city
+  : "Desconocida";
+
+// Ahora (elegante)
+const city = user?.address?.city ?? "Desconocida";
+
+// En arrays
+const firstTag = post?.tags?.[0] ?? "sin-tag";
+
+// En métodos
+const result = api?.getUser?.(id) ?? null;
+```
+
+### structuredClone — Copia profunda
+
+```javascript
+const original = {
+  nombre: "Samuel",
+  scores: [100, 95, 88],
+  meta: { created: new Date() },
+};
+
+// ❌ spread solo copia superficialmente
+const shallow = { ...original };
+shallow.scores.push(70);
+console.log(original.scores); // [100, 95, 88, 70] ⚠️ Mutado!
+
+// ✅ structuredClone — copia profunda nativa
+const deep = structuredClone(original);
+deep.scores.push(70);
+console.log(original.scores); // [100, 95, 88] ✅ Intacto
+```
+
+### Array.at() — Índices negativos
+
+```javascript
+const arr = [1, 2, 3, 4, 5];
+console.log(arr.at(0));   // 1
+console.log(arr.at(-1));  // 5 (último)
+console.log(arr.at(-2));  // 4 (penúltimo)
+```
+
+### Object.groupBy() (ES2024)
+
+```javascript
+const personas = [
+  { nombre: "Ana", depto: "IT" },
+  { nombre: "Luis", depto: "HR" },
+  { nombre: "María", depto: "IT" },
+  { nombre: "Carlos", depto: "HR" },
+];
+
+const porDepto = Object.groupBy(personas, p => p.depto);
+console.log(porDepto);
+// { IT: [{Ana}, {María}], HR: [{Luis}, {Carlos}] }
+```
+
+### Promise.withResolvers() (ES2024)
+
+```javascript
+const { promise, resolve, reject } = Promise.withResolvers();
+
+// Resolver desde cualquier lugar
+setTimeout(() => resolve("¡Listo!"), 1000);
+const result = await promise; // "¡Listo!"
+```
+
+---
+
+## 📋 Web APIs útiles
+
+### LocalStorage / SessionStorage
+
+```javascript
+// Guardar datos persistentes en el navegador
+localStorage.setItem("tema", "dark");
+localStorage.setItem("usuario", JSON.stringify({ nombre: "Samuel" }));
+
+// Leer
+const tema = localStorage.getItem("tema"); // "dark"
+const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+// Eliminar
+localStorage.removeItem("tema");
+localStorage.clear(); // Eliminar todo
+
+// Wrapper útil
+const storage = {
+  get(key, defaultValue = null) {
+    const item = localStorage.getItem(key);
+    try { return item ? JSON.parse(item) : defaultValue; }
+    catch { return item ?? defaultValue; }
+  },
+  set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+  remove(key) { localStorage.removeItem(key); },
+};
+```
+
+### URL y URLSearchParams
+
+```javascript
+const url = new URL("https://api.example.com/search?q=javascript&page=2");
+
+console.log(url.hostname);     // "api.example.com"
+console.log(url.pathname);     // "/search"
+console.log(url.searchParams.get("q")); // "javascript"
+
+// Construir URLs
+const apiUrl = new URL("/users", "https://api.example.com");
+apiUrl.searchParams.set("role", "admin");
+apiUrl.searchParams.set("limit", "10");
+console.log(apiUrl.toString());
+// "https://api.example.com/users?role=admin&limit=10"
+```
+
+### Intl — Internacionalización
+
+```javascript
+// Formatear números
+const formatter = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+});
+console.log(formatter.format(1234567.89)); // "$1,234,567.89"
+
+// Formatear fechas
+const dateFormat = new Intl.DateTimeFormat("es-MX", {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+console.log(dateFormat.format(new Date())); // "miércoles, 16 de abril de 2026"
+
+// Fechas relativas
+const rtf = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
+console.log(rtf.format(-1, "day"));    // "ayer"
+console.log(rtf.format(2, "hour"));    // "dentro de 2 horas"
+console.log(rtf.format(-3, "month"));  // "hace 3 meses"
+```
+
+### Clipboard API
+
+```javascript
+// Copiar al portapapeles
+async function copiar(texto) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    console.log("✅ Copiado");
+  } catch {
+    console.error("❌ No se pudo copiar");
+  }
+}
+
+// Leer del portapapeles
+const contenido = await navigator.clipboard.readText();
+```
+
+---
+
+## 📐 Patrones de código profesional
+
+### Enum-like objects
+
+```javascript
+const STATUS = Object.freeze({
+  PENDING: "pending",
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  BANNED: "banned",
+});
+
+function updateUser(userId, status) {
+  if (!Object.values(STATUS).includes(status)) {
+    throw new Error(`Estado inválido: ${status}`);
+  }
+  // ...
+}
+
+updateUser(1, STATUS.ACTIVE); // ✅
+updateUser(1, "random");      // ❌ Error
+```
+
+### Result Pattern (alternativa a excepciones)
+
+```javascript
+class Result {
+  #ok;
+  #value;
+  #error;
+
+  constructor(ok, value, error) {
+    this.#ok = ok;
+    this.#value = value;
+    this.#error = error;
+  }
+
+  static ok(value) { return new Result(true, value, null); }
+  static fail(error) { return new Result(false, null, error); }
+
+  get isOk() { return this.#ok; }
+  get value() { return this.#value; }
+  get error() { return this.#error; }
+
+  map(fn) {
+    return this.isOk ? Result.ok(fn(this.#value)) : this;
+  }
+}
+
+// Uso
+function dividir(a, b) {
+  if (b === 0) return Result.fail("No se puede dividir por 0");
+  return Result.ok(a / b);
+}
+
+const result = dividir(10, 0);
+if (result.isOk) {
+  console.log("Resultado:", result.value);
+} else {
+  console.log("Error:", result.error);
+}
+```
+
+### Builder Pattern para configuración
+
+```javascript
+class QueryBuilder {
+  #table = "";
+  #conditions = [];
+  #orderBy = null;
+  #limit = null;
+
+  from(table) { this.#table = table; return this; }
+  where(condition) { this.#conditions.push(condition); return this; }
+  order(field, dir = "ASC") { this.#orderBy = `${field} ${dir}`; return this; }
+  take(n) { this.#limit = n; return this; }
+
+  build() {
+    let query = `SELECT * FROM ${this.#table}`;
+    if (this.#conditions.length) query += ` WHERE ${this.#conditions.join(" AND ")}`;
+    if (this.#orderBy) query += ` ORDER BY ${this.#orderBy}`;
+    if (this.#limit) query += ` LIMIT ${this.#limit}`;
+    return query;
+  }
+}
+
+const query = new QueryBuilder()
+  .from("users")
+  .where("active = true")
+  .where("age > 18")
+  .order("name")
+  .take(10)
+  .build();
+
+console.log(query);
+// "SELECT * FROM users WHERE active = true AND age > 18 ORDER BY name ASC LIMIT 10"
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Storage wrapper
+Crea un módulo `AppStorage` que envuelva `localStorage` con: `get(key, default)`, `set(key, value)`, métodos que manejen JSON automáticamente y un método `getOrSet(key, factory)` que obtenga el valor o lo cree si no existe.
+
+### Ejercicio 2 — Formateador inteligente
+Crea funciones utilitarias usando `Intl`: `formatMoney(amount, currency)`, `formatDate(date)`, `timeAgo(date)`.
+
+### Ejercicio 3 — Query Builder
+Extiende el `QueryBuilder` para soportar `select(fields)`, `join(table, on)` y `groupBy(field)`.
+
+### Ejercicio 4 — Refactoring
+Refactoriza este código aplicando guard clauses, nombres descriptivos y clean code:
+```javascript
+function f(d) {
+  if (d) {
+    if (d.t === "a") {
+      if (d.v > 0) {
+        return d.v * 1.16;
+      } else {
+        return 0;
+      }
+    } else {
+      return d.v;
+    }
+  }
+  return null;
+}
+```
+
+### Ejercicio 5 — Mini framework
+Crea un mini framework reactivo: un objeto `state` que cuando se modifica alguna propiedad, ejecuta automáticamente los listeners suscritos (usa `Proxy`).
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+const AppStorage = {
+  get(key, defaultValue = null) {
+    try {
+      const item = localStorage.getItem(key);
+      return item !== null ? JSON.parse(item) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  },
+
+  set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+
+  remove(key) {
+    localStorage.removeItem(key);
+  },
+
+  getOrSet(key, factory) {
+    let value = this.get(key);
+    if (value === null) {
+      value = factory();
+      this.set(key, value);
+    }
+    return value;
+  },
+};
+
+const config = AppStorage.getOrSet("app-config", () => ({
+  tema: "dark",
+  idioma: "es",
+}));
+```
+
+#### Ejercicio 2
+```javascript
+function formatMoney(amount, currency = "MXN", locale = "es-MX") {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+  }).format(amount);
+}
+
+function formatDate(date, locale = "es-MX") {
+  return new Intl.DateTimeFormat(locale, {
+    year: "numeric", month: "long", day: "numeric",
+  }).format(new Date(date));
+}
+
+function timeAgo(date, locale = "es") {
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const diff = Date.now() - new Date(date).getTime();
+  const seconds = Math.floor(diff / 1000);
+
+  if (seconds < 60) return rtf.format(-seconds, "second");
+  if (seconds < 3600) return rtf.format(-Math.floor(seconds / 60), "minute");
+  if (seconds < 86400) return rtf.format(-Math.floor(seconds / 3600), "hour");
+  return rtf.format(-Math.floor(seconds / 86400), "day");
+}
+
+console.log(formatMoney(1500));          // "$1,500.00"
+console.log(formatDate("2026-04-16"));   // "16 de abril de 2026"
+```
+
+#### Ejercicio 3
+```javascript
+class QueryBuilder {
+  #table = ""; #fields = "*"; #conditions = [];
+  #joins = []; #orderBy = null; #limit = null; #group = null;
+
+  select(...fields) { this.#fields = fields.join(", "); return this; }
+  from(table) { this.#table = table; return this; }
+  where(cond) { this.#conditions.push(cond); return this; }
+  join(table, on) { this.#joins.push(`JOIN ${table} ON ${on}`); return this; }
+  groupBy(field) { this.#group = field; return this; }
+  order(field, dir = "ASC") { this.#orderBy = `${field} ${dir}`; return this; }
+  take(n) { this.#limit = n; return this; }
+
+  build() {
+    let q = `SELECT ${this.#fields} FROM ${this.#table}`;
+    this.#joins.forEach(j => q += ` ${j}`);
+    if (this.#conditions.length) q += ` WHERE ${this.#conditions.join(" AND ")}`;
+    if (this.#group) q += ` GROUP BY ${this.#group}`;
+    if (this.#orderBy) q += ` ORDER BY ${this.#orderBy}`;
+    if (this.#limit) q += ` LIMIT ${this.#limit}`;
+    return q;
+  }
+}
+```
+
+#### Ejercicio 4
+```javascript
+function calcularPrecioConImpuesto(producto) {
+  if (!producto) return null;
+  if (producto.tipo !== "a") return producto.valor;
+  if (producto.valor <= 0) return 0;
+
+  const IVA = 1.16;
+  return producto.valor * IVA;
+}
+```
+
+#### Ejercicio 5
+```javascript
+function createReactiveState(initialState, onChange) {
+  return new Proxy(initialState, {
+    set(target, prop, value) {
+      const oldValue = target[prop];
+      target[prop] = value;
+      if (oldValue !== value) {
+        onChange(prop, value, oldValue);
+      }
+      return true;
+    },
+  });
+}
+
+const state = createReactiveState(
+  { count: 0, nombre: "Samuel" },
+  (prop, newVal, oldVal) => {
+    console.log(`${prop}: ${oldVal} → ${newVal}`);
+    // Aquí actualizarías el DOM
+  }
+);
+
+state.count = 1;    // "count: 0 → 1"
+state.nombre = "Ana"; // "nombre: Samuel → Ana"
+```
+
+</details>

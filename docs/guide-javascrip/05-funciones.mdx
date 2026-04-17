@@ -1,0 +1,301 @@
+---
+sidebar_position: 5
+title: "Funciones"
+---
+
+# 🔧 Funciones
+
+Las funciones son **bloques de código reutilizables** que realizan una tarea específica. Son el pilar fundamental de JavaScript.
+
+---
+
+## Declaración de función (Function Declaration)
+
+```javascript
+function saludar(nombre) {
+  return `¡Hola, ${nombre}!`;
+}
+
+console.log(saludar("Samuel")); // "¡Hola, Samuel!"
+
+// Las function declarations tienen HOISTING
+// (puedes usarlas antes de declararlas)
+console.log(sumar(2, 3)); // 5 ✅
+function sumar(a, b) {
+  return a + b;
+}
+```
+
+---
+
+## Expresión de función (Function Expression)
+
+```javascript
+const multiplicar = function (a, b) {
+  return a * b;
+};
+
+console.log(multiplicar(3, 4)); // 12
+
+// ❌ NO tiene hoisting
+// console.log(restar(5, 3)); // Error: restar is not defined
+const restar = function (a, b) {
+  return a - b;
+};
+```
+
+---
+
+## Arrow Functions (ES6+) ✅
+
+Sintaxis más corta y moderna. Es la forma preferida en código moderno:
+
+```javascript
+// Forma completa
+const sumar = (a, b) => {
+  return a + b;
+};
+
+// Return implícito (sin llaves, una expresión)
+const sumar2 = (a, b) => a + b;
+
+// Un solo parámetro (sin paréntesis)
+const doble = n => n * 2;
+
+// Sin parámetros
+const saludo = () => "¡Hola!";
+
+// Retornar un objeto (envolver en paréntesis)
+const crearUsuario = (nombre, edad) => ({ nombre, edad });
+console.log(crearUsuario("Samuel", 25)); // { nombre: "Samuel", edad: 25 }
+```
+
+:::tip ¿Cuándo usar arrow functions?
+- ✅ Callbacks: `array.map(x => x * 2)`
+- ✅ Funciones cortas y simples
+- ❌ Métodos de objeto que usan `this`
+- ❌ Funciones que necesitan `arguments`
+:::
+
+---
+
+## Parámetros por defecto
+
+```javascript
+function crearUsuario(nombre, rol = "usuario", activo = true) {
+  return { nombre, rol, activo };
+}
+
+console.log(crearUsuario("Samuel"));
+// { nombre: "Samuel", rol: "usuario", activo: true }
+
+console.log(crearUsuario("Ana", "admin"));
+// { nombre: "Ana", rol: "admin", activo: true }
+
+console.log(crearUsuario("Luis", "editor", false));
+// { nombre: "Luis", rol: "editor", activo: false }
+```
+
+---
+
+## Rest Parameters (`...args`)
+
+Captura un **número indefinido de argumentos** en un array:
+
+```javascript
+function sumarTodos(...numeros) {
+  return numeros.reduce((total, n) => total + n, 0);
+}
+
+console.log(sumarTodos(1, 2, 3));       // 6
+console.log(sumarTodos(1, 2, 3, 4, 5)); // 15
+
+// Combinado con otros parámetros
+function log(nivel, ...mensajes) {
+  console.log(`[${nivel}]`, ...mensajes);
+}
+
+log("INFO", "Servidor", "iniciado", "en", "puerto", 3000);
+// [INFO] Servidor iniciado en puerto 3000
+```
+
+---
+
+## Destructuring en parámetros
+
+```javascript
+// Destructuring de objetos en parámetros
+function mostrarPerfil({ nombre, edad, ciudad = "Desconocida" }) {
+  console.log(`${nombre}, ${edad} años, de ${ciudad}`);
+}
+
+mostrarPerfil({ nombre: "Samuel", edad: 25, ciudad: "CDMX" });
+// "Samuel, 25 años, de CDMX"
+
+mostrarPerfil({ nombre: "Ana", edad: 22 });
+// "Ana, 22 años, de Desconocida"
+
+// Destructuring de arrays
+function primeroDos([primero, segundo]) {
+  return { primero, segundo };
+}
+
+console.log(primeroDos([10, 20, 30])); // { primero: 10, segundo: 20 }
+```
+
+---
+
+## Scope (Ámbito)
+
+```javascript
+// Scope GLOBAL
+const global = "Soy global";
+
+function ejemplo() {
+  // Scope LOCAL (función)
+  const local = "Soy local";
+  console.log(global); // ✅ Accede al scope global
+  console.log(local);  // ✅ Accede a su propio scope
+
+  if (true) {
+    // Scope de BLOQUE
+    const bloque = "Soy de bloque";
+    console.log(local); // ✅ Accede al scope padre
+  }
+  // console.log(bloque); // ❌ Error: fuera del bloque
+}
+
+// console.log(local); // ❌ Error: fuera de la función
+```
+
+---
+
+## Callbacks
+
+Un **callback** es una función que se pasa como argumento a otra función:
+
+```javascript
+function procesarDatos(datos, callback) {
+  const resultado = datos.map(callback);
+  return resultado;
+}
+
+const duplicados = procesarDatos([1, 2, 3], n => n * 2);
+console.log(duplicados); // [2, 4, 6]
+
+// Ejemplo real: setTimeout
+console.log("Inicio");
+setTimeout(() => {
+  console.log("¡Después de 2 segundos!");
+}, 2000);
+console.log("Fin");
+// Imprime: Inicio → Fin → ¡Después de 2 segundos!
+```
+
+---
+
+## Funciones que retornan funciones
+
+```javascript
+function crearMultiplicador(factor) {
+  return (numero) => numero * factor;
+}
+
+const doble = crearMultiplicador(2);
+const triple = crearMultiplicador(3);
+
+console.log(doble(5));  // 10
+console.log(triple(5)); // 15
+
+// Uso real: crear formatters
+function crearFormateador(moneda) {
+  return (cantidad) => `${cantidad.toFixed(2)} ${moneda}`;
+}
+
+const formatUSD = crearFormateador("USD");
+const formatMXN = crearFormateador("MXN");
+
+console.log(formatUSD(99.5));  // "99.50 USD"
+console.log(formatMXN(1500)); // "1500.00 MXN"
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Área del círculo
+Crea una arrow function `areaCirculo` que reciba el radio y retorne el área (`π * r²`).
+
+### Ejercicio 2 — Función con defaults
+Crea una función `crearEmail` que reciba `usuario`, `dominio` (default: `"gmail.com"`) y retorne el email completo.
+
+### Ejercicio 3 — Rest y reduce
+Crea una función `promedio(...numeros)` que reciba cualquier cantidad de números y retorne el promedio.
+
+### Ejercicio 4 — Callback
+Crea una función `operar(a, b, operacion)` que reciba dos números y un callback. Úsala para sumar, restar y multiplicar.
+
+### Ejercicio 5 — Función factory
+Crea una función `crearSaludo(idioma)` que retorne otra función. Si idioma es `"es"` → `"Hola, "`, si es `"en"` → `"Hello, "`, si es `"fr"` → `"Bonjour, "`.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+const areaCirculo = (radio) => Math.PI * radio ** 2;
+
+console.log(areaCirculo(5));  // 78.53981633974483
+console.log(areaCirculo(10)); // 314.1592653589793
+```
+
+#### Ejercicio 2
+```javascript
+function crearEmail(usuario, dominio = "gmail.com") {
+  return `${usuario}@${dominio}`;
+}
+
+console.log(crearEmail("samuel"));           // "samuel@gmail.com"
+console.log(crearEmail("samuel", "outlook.com")); // "samuel@outlook.com"
+```
+
+#### Ejercicio 3
+```javascript
+const promedio = (...numeros) => {
+  const suma = numeros.reduce((acc, n) => acc + n, 0);
+  return suma / numeros.length;
+};
+
+console.log(promedio(10, 20, 30));     // 20
+console.log(promedio(5, 15, 25, 35));  // 20
+```
+
+#### Ejercicio 4
+```javascript
+function operar(a, b, operacion) {
+  return operacion(a, b);
+}
+
+console.log(operar(10, 5, (a, b) => a + b)); // 15
+console.log(operar(10, 5, (a, b) => a - b)); // 5
+console.log(operar(10, 5, (a, b) => a * b)); // 50
+```
+
+#### Ejercicio 5
+```javascript
+function crearSaludo(idioma) {
+  const saludos = { es: "Hola", en: "Hello", fr: "Bonjour" };
+  const saludo = saludos[idioma] || "Hi";
+  return (nombre) => `${saludo}, ${nombre}!`;
+}
+
+const saludoES = crearSaludo("es");
+const saludoEN = crearSaludo("en");
+
+console.log(saludoES("Samuel")); // "Hola, Samuel!"
+console.log(saludoEN("Samuel")); // "Hello, Samuel!"
+```
+
+</details>

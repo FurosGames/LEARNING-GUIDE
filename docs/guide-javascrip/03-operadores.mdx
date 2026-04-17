@@ -1,0 +1,290 @@
+---
+sidebar_position: 3
+title: "Operadores"
+---
+
+# ⚡ Operadores
+
+Los operadores son símbolos que realizan **operaciones** sobre valores (operandos).
+
+---
+
+## Operadores Aritméticos
+
+```javascript
+const a = 10;
+const b = 3;
+
+console.log(a + b);  // 13  — Suma
+console.log(a - b);  // 7   — Resta
+console.log(a * b);  // 30  — Multiplicación
+console.log(a / b);  // 3.33 — División
+console.log(a % b);  // 1   — Módulo (resto)
+console.log(a ** b); // 1000 — Exponenciación (10³)
+
+// Incremento y decremento
+let contador = 5;
+contador++;  // 6 (post-incremento)
+++contador;  // 7 (pre-incremento)
+contador--;  // 6 (post-decremento)
+--contador;  // 5 (pre-decremento)
+
+// Diferencia pre vs post
+let x = 5;
+console.log(x++); // 5 (usa el valor y LUEGO incrementa)
+console.log(x);   // 6
+console.log(++x); // 7 (incrementa y LUEGO usa el valor)
+```
+
+---
+
+## Operadores de Asignación
+
+```javascript
+let n = 10;
+
+n += 5;   // n = n + 5   → 15
+n -= 3;   // n = n - 3   → 12
+n *= 2;   // n = n * 2   → 24
+n /= 4;   // n = n / 4   → 6
+n %= 4;   // n = n % 4   → 2
+n **= 3;  // n = n ** 3  → 8
+```
+
+---
+
+## Operadores de Comparación
+
+```javascript
+// Igualdad DÉBIL (con coerción) — ❌ Evitar
+console.log(5 == "5");    // true  ⚠️
+console.log(0 == false);  // true  ⚠️
+console.log(null == undefined); // true ⚠️
+console.log("" == false); // true  ⚠️
+
+// Igualdad ESTRICTA (sin coerción) — ✅ Usar siempre
+console.log(5 === "5");    // false
+console.log(0 === false);  // false
+console.log(null === undefined); // false
+
+// Desigualdad
+console.log(5 != "5");    // false (débil)
+console.log(5 !== "5");   // true  (estricta) ✅
+
+// Mayor, menor
+console.log(10 > 5);   // true
+console.log(10 < 5);   // false
+console.log(10 >= 10); // true
+console.log(10 <= 9);  // false
+```
+
+:::tip Regla de oro
+**Siempre** usa `===` y `!==`. Nunca uses `==` o `!=` a menos que tengas una razón muy específica.
+:::
+
+---
+
+## Operadores Lógicos
+
+```javascript
+// AND (&&) — Ambos deben ser true
+console.log(true && true);   // true
+console.log(true && false);  // false
+console.log(5 > 3 && 10 > 7); // true
+
+// OR (||) — Al menos uno debe ser true
+console.log(true || false);  // true
+console.log(false || false); // false
+
+// NOT (!) — Invierte el valor
+console.log(!true);   // false
+console.log(!false);  // true
+console.log(!0);      // true (0 es falsy)
+console.log(!"hola"); // false ("hola" es truthy)
+
+// Doble NOT (!!) — Convierte a boolean
+console.log(!!1);      // true
+console.log(!!0);      // false
+console.log(!!"hola"); // true
+console.log(!!"");     // false
+```
+
+---
+
+## Short-circuit Evaluation
+
+Los operadores `&&` y `||` **no siempre devuelven booleanos** — devuelven el valor que determina el resultado:
+
+```javascript
+// || devuelve el PRIMER valor truthy (o el último si todos son falsy)
+console.log("Samuel" || "Default");  // "Samuel"
+console.log("" || "Default");       // "Default"
+console.log(null || undefined || "último"); // "último"
+console.log(0 || "" || false);       // false (ninguno es truthy)
+
+// && devuelve el PRIMER valor falsy (o el último si todos son truthy)
+console.log("Samuel" && "Hola");  // "Hola"
+console.log("" && "Hola");       // ""
+console.log(null && "Hola");     // null
+
+// Uso práctico
+const nombre = inputUsuario || "Anónimo"; // Valor por defecto
+const resultado = condicion && ejecutarFuncion(); // Ejecución condicional
+```
+
+---
+
+## Nullish Coalescing (`??`)
+
+A diferencia de `||`, solo reacciona ante `null` y `undefined` (no ante `0`, `""`, `false`):
+
+```javascript
+// || trata 0 y "" como falsy ⚠️
+console.log(0 || 42);     // 42 (no deseado si 0 es válido)
+console.log("" || "N/A"); // "N/A"
+
+// ?? solo reacciona a null/undefined ✅
+console.log(0 ?? 42);     // 0 ✅
+console.log("" ?? "N/A"); // "" ✅
+console.log(null ?? 42);      // 42
+console.log(undefined ?? 42); // 42
+
+// Uso real
+const puerto = config.puerto ?? 3000;
+const nombre = usuario.nombre ?? "Sin nombre";
+```
+
+---
+
+## Operador Ternario
+
+Es un `if/else` en una sola línea: `condición ? valorSiTrue : valorSiFalse`
+
+```javascript
+const edad = 20;
+const categoria = edad >= 18 ? "adulto" : "menor";
+console.log(categoria); // "adulto"
+
+// Ternarios anidados (evitar si es complejo)
+const nota = 85;
+const calificacion = nota >= 90 ? "A"
+  : nota >= 80 ? "B"
+  : nota >= 70 ? "C"
+  : "F";
+
+// Uso con template literals
+const mensaje = `Tienes ${items.length} ${items.length === 1 ? "item" : "items"}`;
+```
+
+---
+
+## Optional Chaining (`?.`)
+
+Accede a propiedades profundas sin errores si algún valor intermedio es `null` o `undefined`:
+
+```javascript
+const usuario = {
+  nombre: "Samuel",
+  direccion: {
+    ciudad: "CDMX",
+  },
+};
+
+// Sin optional chaining — puede lanzar error
+// console.log(usuario.trabajo.empresa); // ❌ TypeError
+
+// Con optional chaining
+console.log(usuario.trabajo?.empresa);    // undefined (sin error)
+console.log(usuario.direccion?.ciudad);   // "CDMX"
+console.log(usuario.metodos?.saludar?.()); // undefined (sin error)
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Calculadora básica
+Crea variables `a = 15` y `b = 4`. Imprime el resultado de suma, resta, multiplicación, división y módulo.
+
+### Ejercicio 2 — ¿Qué imprime?
+Predice el resultado sin ejecutar:
+```javascript
+console.log(0 == false);
+console.log(0 === false);
+console.log("" == false);
+console.log("" === false);
+console.log(null == undefined);
+console.log(null === undefined);
+```
+
+### Ejercicio 3 — Valor por defecto
+Escribe una función `saludo(nombre)` que use `??` para asignar `"Mundo"` si nombre es `null` o `undefined`. Debe funcionar correctamente con `saludo("")` → `"Hola, "`.
+
+### Ejercicio 4 — Clasificador
+Usando **solo el operador ternario**, escribe una expresión que clasifique una edad: `"niño"` (0-12), `"adolescente"` (13-17), `"adulto"` (18-64), `"senior"` (65+).
+
+### Ejercicio 5 — Safe access
+Dado el siguiente objeto, accede de forma segura a `usuario.empresa.direccion.calle` usando optional chaining:
+```javascript
+const usuario = { nombre: "Ana", empresa: null };
+```
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+const a = 15;
+const b = 4;
+
+console.log(`Suma: ${a + b}`);           // 19
+console.log(`Resta: ${a - b}`);          // 11
+console.log(`Multiplicación: ${a * b}`); // 60
+console.log(`División: ${a / b}`);       // 3.75
+console.log(`Módulo: ${a % b}`);         // 3
+```
+
+#### Ejercicio 2
+```javascript
+console.log(0 == false);        // true
+console.log(0 === false);       // false
+console.log("" == false);       // true
+console.log("" === false);      // false
+console.log(null == undefined); // true
+console.log(null === undefined); // false
+```
+
+#### Ejercicio 3
+```javascript
+function saludo(nombre) {
+  const n = nombre ?? "Mundo";
+  return `Hola, ${n}`;
+}
+
+console.log(saludo("Samuel"));   // "Hola, Samuel"
+console.log(saludo(null));       // "Hola, Mundo"
+console.log(saludo(undefined));  // "Hola, Mundo"
+console.log(saludo(""));        // "Hola, " ← respeta string vacío
+```
+
+#### Ejercicio 4
+```javascript
+const edad = 25;
+const clasificacion = edad <= 12 ? "niño"
+  : edad <= 17 ? "adolescente"
+  : edad <= 64 ? "adulto"
+  : "senior";
+
+console.log(clasificacion); // "adulto"
+```
+
+#### Ejercicio 5
+```javascript
+const usuario = { nombre: "Ana", empresa: null };
+const calle = usuario.empresa?.direccion?.calle;
+console.log(calle); // undefined (sin error)
+```
+
+</details>

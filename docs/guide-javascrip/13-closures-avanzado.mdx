@@ -1,0 +1,392 @@
+---
+sidebar_position: 13
+title: "Closures y Conceptos Avanzados"
+---
+
+# 🧠 Closures y Conceptos Avanzados
+
+Estos conceptos son los que separan a un desarrollador junior de uno senior.
+
+---
+
+## Closures (Clausuras)
+
+Un **closure** es una función que "recuerda" el scope donde fue creada, incluso después de que ese scope haya terminado:
+
+```javascript
+function crearContador() {
+  let cuenta = 0; // Variable "atrapada" por el closure
+
+  return {
+    incrementar() { return ++cuenta; },
+    decrementar() { return --cuenta; },
+    obtener() { return cuenta; },
+  };
+}
+
+const contador = crearContador();
+console.log(contador.incrementar()); // 1
+console.log(contador.incrementar()); // 2
+console.log(contador.decrementar()); // 1
+console.log(contador.obtener());     // 1
+
+// "cuenta" NO es accesible desde fuera — encapsulación sin clases
+```
+
+### ¿Por qué importan los closures?
+
+```javascript
+// 1. Datos privados
+function crearWallet(saldoInicial) {
+  let saldo = saldoInicial;
+
+  return {
+    depositar(monto) { saldo += monto; },
+    retirar(monto) {
+      if (monto > saldo) throw new Error("Saldo insuficiente");
+      saldo -= monto;
+    },
+    get balance() { return saldo; },
+  };
+}
+
+const wallet = crearWallet(1000);
+wallet.depositar(500);
+console.log(wallet.balance); // 1500
+// wallet.saldo = 999999; // ❌ No existe directamente
+
+// 2. Function factories
+function crearMultiplicador(factor) {
+  return (n) => n * factor; // "factor" queda atrapado
+}
+
+const doble = crearMultiplicador(2);
+const triple = crearMultiplicador(3);
+console.log(doble(5));  // 10
+console.log(triple(5)); // 15
+```
+
+---
+
+## IIFE (Immediately Invoked Function Expression)
+
+Función que se ejecuta inmediatamente al definirse:
+
+```javascript
+// Patrón clásico (antes de ES6)
+const modulo = (function () {
+  let privado = 0;
+
+  return {
+    incrementar() { privado++; },
+    obtener() { return privado; },
+  };
+})();
+
+modulo.incrementar();
+console.log(modulo.obtener()); // 1
+
+// Uso moderno: aislar scope
+(async () => {
+  const datos = await fetch("/api/datos").then(r => r.json());
+  console.log(datos);
+})();
+```
+
+---
+
+## Higher-Order Functions
+
+Funciones que **reciben o retornan** otras funciones:
+
+```javascript
+// 1. Función que recibe una función
+function ejecutarConLog(fn, ...args) {
+  console.log(`Ejecutando ${fn.name}...`);
+  const inicio = performance.now();
+  const resultado = fn(...args);
+  const tiempo = (performance.now() - inicio).toFixed(2);
+  console.log(`Completado en ${tiempo}ms`);
+  return resultado;
+}
+
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+ejecutarConLog(fibonacci, 30);
+
+// 2. Función que retorna función
+function validarCon(regla) {
+  return (valor) => regla.test(valor);
+}
+
+const esEmail = validarCon(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+const esTelefono = validarCon(/^\+?\d{10,14}$/);
+
+console.log(esEmail("test@mail.com")); // true
+console.log(esTelefono("+521234567890")); // true
+```
+
+---
+
+## Currying
+
+Transformar una función de múltiples argumentos en una cadena de funciones de un solo argumento:
+
+```javascript
+// Sin currying
+function sumar(a, b, c) {
+  return a + b + c;
+}
+
+// Con currying manual
+function sumarCurried(a) {
+  return (b) => {
+    return (c) => {
+      return a + b + c;
+    };
+  };
+}
+
+console.log(sumarCurried(1)(2)(3)); // 6
+
+// Función curry genérica
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn(...args);
+    }
+    return (...nextArgs) => curried(...args, ...nextArgs);
+  };
+}
+
+const sumarC = curry((a, b, c) => a + b + c);
+console.log(sumarC(1)(2)(3));    // 6
+console.log(sumarC(1, 2)(3));    // 6
+console.log(sumarC(1)(2, 3));    // 6
+
+// Uso real: crear funciones especializadas
+const formatear = curry((moneda, decimales, valor) =>
+  `${valor.toFixed(decimales)} ${moneda}`
+);
+
+const formatUSD = formatear("USD")(2);
+const formatEUR = formatear("EUR")(2);
+
+console.log(formatUSD(99.5));  // "99.50 USD"
+console.log(formatEUR(120.3)); // "120.30 EUR"
+```
+
+---
+
+## Memoización
+
+Cachear resultados de funciones para evitar cálculos repetidos:
+
+```javascript
+function memoize(fn) {
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      console.log("📦 Desde caché");
+      return cache.get(key);
+    }
+
+    console.log("🔄 Calculando...");
+    const resultado = fn(...args);
+    cache.set(key, resultado);
+    return resultado;
+  };
+}
+
+const fibMemo = memoize(function fib(n) {
+  if (n <= 1) return n;
+  return fibMemo(n - 1) + fibMemo(n - 2);
+});
+
+console.time("Primera vez");
+console.log(fibMemo(40)); // 🔄 Calculando...
+console.timeEnd("Primera vez");
+
+console.time("Segunda vez");
+console.log(fibMemo(40)); // 📦 Desde caché
+console.timeEnd("Segunda vez"); // ¡Mucho más rápido!
+```
+
+---
+
+## Debounce y Throttle
+
+Patrones esenciales para controlar la frecuencia de ejecución:
+
+```javascript
+// DEBOUNCE — Ejecuta DESPUÉS de que el usuario deja de hacer algo
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+// Ejemplo: búsqueda mientras escribes
+const buscar = debounce((query) => {
+  console.log("Buscando:", query);
+  // fetch(`/api/search?q=${query}`)...
+}, 500);
+
+input.addEventListener("input", (e) => buscar(e.target.value));
+
+// THROTTLE — Ejecuta MÁXIMO una vez cada X ms
+function throttle(fn, limit) {
+  let enEspera = false;
+  return function (...args) {
+    if (!enEspera) {
+      fn.apply(this, args);
+      enEspera = true;
+      setTimeout(() => { enEspera = false; }, limit);
+    }
+  };
+}
+
+// Ejemplo: scroll handler
+const onScroll = throttle(() => {
+  console.log("Scroll position:", window.scrollY);
+}, 200);
+
+window.addEventListener("scroll", onScroll);
+```
+
+---
+
+## Composición de funciones
+
+```javascript
+// pipe — ejecuta funciones de izquierda a derecha
+const pipe = (...fns) => (valor) =>
+  fns.reduce((acc, fn) => fn(acc), valor);
+
+// compose — ejecuta funciones de derecha a izquierda
+const compose = (...fns) => (valor) =>
+  fns.reduceRight((acc, fn) => fn(acc), valor);
+
+// Ejemplo
+const limpiar = (str) => str.trim();
+const minusculas = (str) => str.toLowerCase();
+const sinEspacios = (str) => str.replace(/\s+/g, "-");
+
+const slugify = pipe(limpiar, minusculas, sinEspacios);
+
+console.log(slugify("  Hola Mundo Cruel  ")); // "hola-mundo-cruel"
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Closure práctico
+Crea una función `crearRateLimiter(maxLlamadas, ventanaMs)` que retorne una función. La función retornada solo permite ejecutarse `maxLlamadas` veces dentro de la ventana de tiempo.
+
+### Ejercicio 2 — Curry
+Crea una función curry `filtrarPor(propiedad)(valor)(array)` que filtre un array de objetos. Ejemplo: `filtrarPor("ciudad")("CDMX")(usuarios)`.
+
+### Ejercicio 3 — Memoize
+Implementa un `memoize` con límite de caché: cuando el caché tenga más de N entradas, elimina la más antigua (LRU simple).
+
+### Ejercicio 4 — Pipe
+Crea un pipeline que procese un array de precios: filtre los mayores a 100, aplique un 10% de descuento y formatee como moneda.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+function crearRateLimiter(maxLlamadas, ventanaMs) {
+  let llamadas = 0;
+
+  setInterval(() => { llamadas = 0; }, ventanaMs);
+
+  return function (fn) {
+    if (llamadas < maxLlamadas) {
+      llamadas++;
+      return fn();
+    }
+    console.warn("Límite alcanzado, intenta después");
+    return null;
+  };
+}
+
+const limiter = crearRateLimiter(3, 5000);
+limiter(() => console.log("1")); // ✅
+limiter(() => console.log("2")); // ✅
+limiter(() => console.log("3")); // ✅
+limiter(() => console.log("4")); // ⚠️ Límite alcanzado
+```
+
+#### Ejercicio 2
+```javascript
+const filtrarPor = (propiedad) => (valor) => (array) =>
+  array.filter(item => item[propiedad] === valor);
+
+const usuarios = [
+  { nombre: "Ana", ciudad: "CDMX" },
+  { nombre: "Luis", ciudad: "GDL" },
+  { nombre: "María", ciudad: "CDMX" },
+];
+
+const deCDMX = filtrarPor("ciudad")("CDMX");
+console.log(deCDMX(usuarios));
+// [{ nombre: "Ana"... }, { nombre: "María"... }]
+```
+
+#### Ejercicio 3
+```javascript
+function memoizeLRU(fn, maxSize = 10) {
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      const value = cache.get(key);
+      cache.delete(key);
+      cache.set(key, value); // Mover al final (más reciente)
+      return value;
+    }
+
+    const result = fn(...args);
+
+    if (cache.size >= maxSize) {
+      const oldest = cache.keys().next().value;
+      cache.delete(oldest);
+    }
+
+    cache.set(key, result);
+    return result;
+  };
+}
+```
+
+#### Ejercicio 4
+```javascript
+const pipe = (...fns) => (val) => fns.reduce((acc, fn) => fn(acc), val);
+
+const filtrarMayores100 = (precios) => precios.filter(p => p > 100);
+const descuento10 = (precios) => precios.map(p => p * 0.9);
+const formatear = (precios) => precios.map(p => `$${p.toFixed(2)}`);
+
+const procesarPrecios = pipe(filtrarMayores100, descuento10, formatear);
+
+const precios = [50, 150, 80, 200, 99, 300];
+console.log(procesarPrecios(precios));
+// ["$135.00", "$180.00", "$270.00"]
+```
+
+</details>

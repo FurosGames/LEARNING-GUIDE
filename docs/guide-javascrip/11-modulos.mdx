@@ -1,0 +1,365 @@
+---
+sidebar_position: 11
+title: "Módulos (import/export)"
+---
+
+# 📦 Módulos (import / export)
+
+Los módulos permiten **organizar el código** en archivos separados, cada uno con su propia responsabilidad.
+
+---
+
+## ¿Por qué usar módulos?
+
+- ✅ **Organización**: código separado por función
+- ✅ **Reutilización**: importar funciones en múltiples archivos
+- ✅ **Encapsulación**: cada módulo tiene su propio scope
+- ✅ **Mantenimiento**: más fácil de encontrar y corregir bugs
+
+---
+
+## Named exports (exportaciones con nombre)
+
+```javascript
+// 📁 math.js
+
+// Exportar al declarar
+export const PI = 3.14159;
+
+export function sumar(a, b) {
+  return a + b;
+}
+
+export function restar(a, b) {
+  return a - b;
+}
+
+export class Calculadora {
+  static multiplicar(a, b) {
+    return a * b;
+  }
+}
+
+// O exportar al final
+const EULER = 2.71828;
+function dividir(a, b) {
+  if (b === 0) throw new Error("No se puede dividir por 0");
+  return a / b;
+}
+
+export { EULER, dividir };
+```
+
+### Importar named exports
+
+```javascript
+// 📁 app.js
+
+// Importar específicos
+import { sumar, restar, PI } from "./math.js";
+console.log(sumar(2, 3)); // 5
+console.log(PI);           // 3.14159
+
+// Renombrar al importar
+import { sumar as sum, PI as pi } from "./math.js";
+console.log(sum(2, 3)); // 5
+
+// Importar TODO como un namespace
+import * as math from "./math.js";
+console.log(math.sumar(2, 3));     // 5
+console.log(math.PI);              // 3.14159
+console.log(math.Calculadora.multiplicar(3, 4)); // 12
+```
+
+---
+
+## Default export (exportación por defecto)
+
+Cada módulo puede tener **un solo default export**:
+
+```javascript
+// 📁 Usuario.js
+export default class Usuario {
+  constructor(nombre, email) {
+    this.nombre = nombre;
+    this.email = email;
+  }
+
+  toString() {
+    return `${this.nombre} <${this.email}>`;
+  }
+}
+
+// 📁 config.js
+const config = {
+  apiUrl: "https://api.example.com",
+  timeout: 5000,
+  debug: false,
+};
+export default config;
+```
+
+### Importar default exports
+
+```javascript
+// El nombre de importación puede ser cualquiera
+import Usuario from "./Usuario.js";
+import miConfig from "./config.js";
+
+const user = new Usuario("Samuel", "samuel@mail.com");
+console.log(user.toString()); // "Samuel <samuel@mail.com>"
+console.log(miConfig.apiUrl); // "https://api.example.com"
+```
+
+---
+
+## Combinar default + named exports
+
+```javascript
+// 📁 api.js
+const BASE_URL = "https://api.example.com";
+
+export async function get(endpoint) {
+  const res = await fetch(`${BASE_URL}${endpoint}`);
+  return res.json();
+}
+
+export async function post(endpoint, data) {
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+// Default: la función principal del módulo
+export default { get, post, BASE_URL };
+```
+
+```javascript
+// 📁 app.js
+
+// Importar default y named al mismo tiempo
+import api, { get, post } from "./api.js";
+
+// Usar el default
+const users = await api.get("/users");
+
+// O usar los named directamente
+const posts = await get("/posts");
+```
+
+---
+
+## Re-exports (barriles)
+
+Consolidan módulos en un solo punto de entrada:
+
+```javascript
+// 📁 utils/string.js
+export function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// 📁 utils/number.js
+export function clamp(num, min, max) {
+  return Math.min(Math.max(num, min), max);
+}
+
+// 📁 utils/index.js — Barrel file
+export { capitalize } from "./string.js";
+export { clamp } from "./number.js";
+export { default as Validador } from "./Validador.js";
+
+// Ahora se importa desde un solo lugar
+// 📁 app.js
+import { capitalize, clamp, Validador } from "./utils/index.js";
+```
+
+---
+
+## Dynamic imports (importaciones dinámicas)
+
+Cargan módulos **bajo demanda** (lazy loading):
+
+```javascript
+// Se carga solo cuando el usuario hace click
+boton.addEventListener("click", async () => {
+  const { Chart } = await import("./chart.js");
+  const chart = new Chart(datos);
+  chart.render();
+});
+
+// Útil para code splitting y rendimiento
+async function cargarPagina(nombre) {
+  const modulo = await import(`./pages/${nombre}.js`);
+  modulo.default.render();
+}
+```
+
+---
+
+## Módulos en HTML
+
+```html
+<!-- type="module" habilita import/export en el navegador -->
+<script type="module" src="./app.js"></script>
+
+<!-- Inline module -->
+<script type="module">
+  import { saludar } from "./utils.js";
+  console.log(saludar("Samuel"));
+</script>
+
+<!-- nomodule — fallback para navegadores antiguos -->
+<script nomodule src="./app-legacy.js"></script>
+```
+
+---
+
+## Módulos en Node.js
+
+```javascript
+// Opción 1: Agregar "type": "module" en package.json
+// {
+//   "type": "module"
+// }
+
+// Opción 2: Usar extensión .mjs
+// archivo.mjs
+
+// CommonJS (antiguo, aún muy usado)
+// const fs = require("fs");         // Importar
+// module.exports = { miFuncion };   // Exportar
+
+// ESM (moderno) — requiere "type": "module" en package.json
+import fs from "node:fs";
+import { readFile } from "node:fs/promises";
+```
+
+---
+
+## Estructura de proyecto real
+
+```
+📁 src/
+├── 📁 components/
+│   ├── Header.js
+│   ├── Footer.js
+│   └── index.js          ← barrel file
+├── 📁 services/
+│   ├── api.js
+│   ├── auth.js
+│   └── index.js
+├── 📁 utils/
+│   ├── formatters.js
+│   ├── validators.js
+│   └── index.js
+├── 📁 constants/
+│   └── config.js
+└── app.js                 ← punto de entrada
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Exportar e importar
+Crea un módulo `calculadora.js` con funciones `sumar`, `restar`, `multiplicar` y `dividir` como named exports. Impórtalas en otro archivo.
+
+### Ejercicio 2 — Default export
+Crea un módulo `Logger.js` que exporte por defecto una clase `Logger` con métodos `info()`, `warn()` y `error()` que prefijen los mensajes con `[INFO]`, `[WARN]`, `[ERROR]`.
+
+### Ejercicio 3 — Barrel file
+Crea 3 módulos de utilidades y un barrel file `utils/index.js` que los re-exporte todos.
+
+### Ejercicio 4 — Dynamic import
+Simula un menú donde al seleccionar una opción se carga dinámicamente el módulo correspondiente con `import()`.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+// 📁 calculadora.js
+export const sumar = (a, b) => a + b;
+export const restar = (a, b) => a - b;
+export const multiplicar = (a, b) => a * b;
+export const dividir = (a, b) => {
+  if (b === 0) throw new Error("División por cero");
+  return a / b;
+};
+
+// 📁 app.js
+import { sumar, restar, multiplicar, dividir } from "./calculadora.js";
+console.log(sumar(10, 5));       // 15
+console.log(multiplicar(3, 4));  // 12
+```
+
+#### Ejercicio 2
+```javascript
+// 📁 Logger.js
+export default class Logger {
+  info(...args) {
+    console.log("[INFO]", ...args);
+  }
+  warn(...args) {
+    console.warn("[WARN]", ...args);
+  }
+  error(...args) {
+    console.error("[ERROR]", ...args);
+  }
+}
+
+// 📁 app.js
+import Logger from "./Logger.js";
+const log = new Logger();
+log.info("Servidor iniciado");
+log.error("Conexión fallida");
+```
+
+#### Ejercicio 3
+```javascript
+// 📁 utils/strings.js
+export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+export const slugify = (s) => s.toLowerCase().replace(/\s+/g, "-");
+
+// 📁 utils/numbers.js
+export const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+
+// 📁 utils/dates.js
+export const formatDate = (d) => new Date(d).toLocaleDateString("es-MX");
+
+// 📁 utils/index.js
+export { capitalize, slugify } from "./strings.js";
+export { clamp } from "./numbers.js";
+export { formatDate } from "./dates.js";
+
+// 📁 app.js
+import { capitalize, clamp, formatDate } from "./utils/index.js";
+```
+
+#### Ejercicio 4
+```javascript
+async function cargarModulo(opcion) {
+  switch (opcion) {
+    case "graficos":
+      const { renderChart } = await import("./modules/graficos.js");
+      renderChart();
+      break;
+    case "reportes":
+      const { generarReporte } = await import("./modules/reportes.js");
+      generarReporte();
+      break;
+    default:
+      console.log("Opción no válida");
+  }
+}
+
+cargarModulo("graficos");
+```
+
+</details>

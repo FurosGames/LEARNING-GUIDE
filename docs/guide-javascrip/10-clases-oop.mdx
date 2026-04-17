@@ -1,0 +1,381 @@
+---
+sidebar_position: 10
+title: "Clases y Programación Orientada a Objetos"
+---
+
+# 🏛️ Clases y Programación Orientada a Objetos (OOP)
+
+Las clases en JavaScript (ES6+) proporcionan una sintaxis limpia para crear objetos con comportamiento compartido.
+
+---
+
+## Crear una clase
+
+```javascript
+class Persona {
+  // Constructor — se ejecuta al crear una instancia
+  constructor(nombre, edad) {
+    this.nombre = nombre;
+    this.edad = edad;
+  }
+
+  // Método
+  saludar() {
+    return `Hola, soy ${this.nombre} y tengo ${this.edad} años`;
+  }
+
+  // Método
+  esAdulto() {
+    return this.edad >= 18;
+  }
+}
+
+// Crear instancias con "new"
+const samuel = new Persona("Samuel", 25);
+const ana = new Persona("Ana", 17);
+
+console.log(samuel.saludar());  // "Hola, soy Samuel y tengo 25 años"
+console.log(ana.esAdulto());    // false
+```
+
+---
+
+## Getters y Setters
+
+Permiten controlar cómo se acceden y modifican las propiedades:
+
+```javascript
+class Producto {
+  #precio; // Propiedad privada
+
+  constructor(nombre, precio) {
+    this.nombre = nombre;
+    this.#precio = precio;
+  }
+
+  // Getter — se accede como propiedad, no como método
+  get precio() {
+    return `$${this.#precio.toFixed(2)}`;
+  }
+
+  get precioConIVA() {
+    return `$${(this.#precio * 1.16).toFixed(2)}`;
+  }
+
+  // Setter — valida antes de asignar
+  set precio(nuevo) {
+    if (nuevo < 0) throw new Error("El precio no puede ser negativo");
+    this.#precio = nuevo;
+  }
+}
+
+const laptop = new Producto("MacBook", 25000);
+console.log(laptop.precio);      // "$25000.00" (usa getter)
+console.log(laptop.precioConIVA); // "$29000.00"
+
+laptop.precio = 27000;            // Usa setter
+// laptop.precio = -100;          // Error: precio negativo
+```
+
+---
+
+## Propiedades y métodos estáticos
+
+Pertenecen a la **clase**, no a las instancias:
+
+```javascript
+class MathHelper {
+  static PI = 3.14159;
+
+  static circleArea(radio) {
+    return MathHelper.PI * radio ** 2;
+  }
+
+  static random(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+}
+
+// Se accede desde la CLASE, no desde instancias
+console.log(MathHelper.PI);              // 3.14159
+console.log(MathHelper.circleArea(5));   // 78.53
+console.log(MathHelper.random(1, 100));  // número aleatorio
+
+// const m = new MathHelper();
+// m.circleArea(5); // ❌ Error: no existe en instancias
+```
+
+---
+
+## Herencia con `extends`
+
+```javascript
+class Animal {
+  constructor(nombre, sonido) {
+    this.nombre = nombre;
+    this.sonido = sonido;
+  }
+
+  hablar() {
+    return `${this.nombre} hace ${this.sonido}`;
+  }
+}
+
+class Perro extends Animal {
+  constructor(nombre, raza) {
+    super(nombre, "Guau!"); // Llama al constructor padre
+    this.raza = raza;
+  }
+
+  // Método propio de Perro
+  buscar(objeto) {
+    return `${this.nombre} busca ${objeto} 🐕`;
+  }
+
+  // Sobrescribir método del padre
+  hablar() {
+    return `🐶 ${super.hablar()}`; // Usa el método padre + extensión
+  }
+}
+
+class Gato extends Animal {
+  constructor(nombre) {
+    super(nombre, "Miau!");
+  }
+
+  ronronear() {
+    return `${this.nombre} ronronea... 😺`;
+  }
+}
+
+const firulais = new Perro("Firulais", "Labrador");
+console.log(firulais.hablar());        // "🐶 Firulais hace Guau!"
+console.log(firulais.buscar("pelota")); // "Firulais busca pelota 🐕"
+
+const michi = new Gato("Michi");
+console.log(michi.hablar());    // "Michi hace Miau!"
+console.log(michi.ronronear()); // "Michi ronronea... 😺"
+
+// instanceof
+console.log(firulais instanceof Perro);  // true
+console.log(firulais instanceof Animal); // true
+console.log(michi instanceof Perro);     // false
+```
+
+---
+
+## Propiedades privadas (`#`)
+
+Las propiedades privadas **solo son accesibles dentro de la clase**:
+
+```javascript
+class CuentaBancaria {
+  #saldo;
+  #titular;
+
+  constructor(titular, saldoInicial) {
+    this.#titular = titular;
+    this.#saldo = saldoInicial;
+  }
+
+  get saldo() {
+    return `$${this.#saldo.toFixed(2)}`;
+  }
+
+  depositar(monto) {
+    if (monto <= 0) throw new Error("Monto inválido");
+    this.#saldo += monto;
+    return `Depositado: $${monto}. Nuevo saldo: ${this.saldo}`;
+  }
+
+  retirar(monto) {
+    if (monto > this.#saldo) throw new Error("Saldo insuficiente");
+    this.#saldo -= monto;
+    return `Retirado: $${monto}. Nuevo saldo: ${this.saldo}`;
+  }
+
+  #registrarTransaccion(tipo, monto) {
+    // Método privado — solo accesible internamente
+    console.log(`[${tipo}] $${monto} — ${this.#titular}`);
+  }
+}
+
+const cuenta = new CuentaBancaria("Samuel", 5000);
+console.log(cuenta.saldo);           // "$5000.00"
+console.log(cuenta.depositar(1000)); // "Depositado: $1000..."
+// console.log(cuenta.#saldo);       // ❌ SyntaxError: propiedad privada
+```
+
+---
+
+## Patrón con composición (alternativa a herencia)
+
+```javascript
+// Composición > Herencia en muchos casos
+
+const conVolador = (base) => ({
+  ...base,
+  volar() { return `${base.nombre} está volando! ✈️`; },
+});
+
+const conNadador = (base) => ({
+  ...base,
+  nadar() { return `${base.nombre} está nadando! 🏊`; },
+});
+
+const crearPato = (nombre) => {
+  const base = { nombre };
+  return {
+    ...conVolador(base),
+    ...conNadador(base),
+    cuackear() { return `${nombre}: ¡Cuack! 🦆`; },
+  };
+};
+
+const donald = crearPato("Donald");
+console.log(donald.volar());     // "Donald está volando! ✈️"
+console.log(donald.nadar());     // "Donald está nadando! 🏊"
+console.log(donald.cuackear());  // "Donald: ¡Cuack! 🦆"
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Clase básica
+Crea una clase `Rectangulo` con propiedades `ancho` y `alto`. Agrega métodos `area()` y `perimetro()` y un getter `esQuadrado`.
+
+### Ejercicio 2 — Herencia
+Crea una clase `Vehiculo` con `marca`, `modelo` y `velocidad`. Luego crea `Auto` y `Moto` que hereden de `Vehiculo`. `Auto` debe tener `numPuertas` y `Moto` debe tener `tipo` (deportiva, scooter).
+
+### Ejercicio 3 — Encapsulación
+Crea una clase `ListaDeTareas` con un array privado `#tareas`. Agrega métodos `agregar(tarea)`, `completar(index)`, `eliminar(index)` y un getter `pendientes` que retorne las no completadas.
+
+### Ejercicio 4 — Métodos estáticos
+Crea una clase `Validador` con métodos estáticos: `esEmail(str)`, `esNumero(str)`, `tieneMinLength(str, min)`.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+class Rectangulo {
+  constructor(ancho, alto) {
+    this.ancho = ancho;
+    this.alto = alto;
+  }
+
+  area() {
+    return this.ancho * this.alto;
+  }
+
+  perimetro() {
+    return 2 * (this.ancho + this.alto);
+  }
+
+  get esCuadrado() {
+    return this.ancho === this.alto;
+  }
+}
+
+const r = new Rectangulo(5, 5);
+console.log(r.area());       // 25
+console.log(r.perimetro());  // 20
+console.log(r.esCuadrado);   // true
+```
+
+#### Ejercicio 2
+```javascript
+class Vehiculo {
+  constructor(marca, modelo, velocidad = 0) {
+    this.marca = marca;
+    this.modelo = modelo;
+    this.velocidad = velocidad;
+  }
+
+  acelerar(km) {
+    this.velocidad += km;
+    return `${this.marca} ${this.modelo}: ${this.velocidad} km/h`;
+  }
+}
+
+class Auto extends Vehiculo {
+  constructor(marca, modelo, numPuertas) {
+    super(marca, modelo);
+    this.numPuertas = numPuertas;
+  }
+}
+
+class Moto extends Vehiculo {
+  constructor(marca, modelo, tipo) {
+    super(marca, modelo);
+    this.tipo = tipo;
+  }
+}
+
+const auto = new Auto("Toyota", "Corolla", 4);
+console.log(auto.acelerar(60)); // "Toyota Corolla: 60 km/h"
+
+const moto = new Moto("Honda", "CBR", "deportiva");
+console.log(moto.acelerar(80)); // "Honda CBR: 80 km/h"
+```
+
+#### Ejercicio 3
+```javascript
+class ListaDeTareas {
+  #tareas = [];
+
+  agregar(texto) {
+    this.#tareas.push({ texto, completada: false });
+  }
+
+  completar(index) {
+    if (this.#tareas[index]) {
+      this.#tareas[index].completada = true;
+    }
+  }
+
+  eliminar(index) {
+    this.#tareas.splice(index, 1);
+  }
+
+  get pendientes() {
+    return this.#tareas.filter(t => !t.completada);
+  }
+
+  get todas() {
+    return [...this.#tareas];
+  }
+}
+
+const lista = new ListaDeTareas();
+lista.agregar("Estudiar JS");
+lista.agregar("Hacer ejercicios");
+lista.completar(0);
+console.log(lista.pendientes); // [{ texto: "Hacer ejercicios", completada: false }]
+```
+
+#### Ejercicio 4
+```javascript
+class Validador {
+  static esEmail(str) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+  }
+
+  static esNumero(str) {
+    return !isNaN(str) && str.trim() !== "";
+  }
+
+  static tieneMinLength(str, min) {
+    return str.length >= min;
+  }
+}
+
+console.log(Validador.esEmail("a@b.com"));      // true
+console.log(Validador.esNumero("123"));          // true
+console.log(Validador.tieneMinLength("hola", 3)); // true
+```
+
+</details>

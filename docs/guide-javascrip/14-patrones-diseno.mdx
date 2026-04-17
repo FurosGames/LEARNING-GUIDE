@@ -1,0 +1,447 @@
+---
+sidebar_position: 14
+title: "Patrones de Diseño"
+---
+
+# 🏗️ Patrones de Diseño en JavaScript
+
+Los patrones de diseño son **soluciones probadas** a problemas recurrentes en el desarrollo de software. Conocerlos te convierte en un desarrollador más profesional.
+
+---
+
+## 1. Module Pattern
+
+Encapsula código con scope privado y expone una API pública:
+
+```javascript
+const AuthModule = (() => {
+  // Privado
+  let token = null;
+  const API_URL = "https://api.example.com";
+
+  async function request(endpoint, options = {}) {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  // API pública
+  return {
+    async login(email, password) {
+      const data = await request("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      token = data.token;
+      return data.user;
+    },
+
+    logout() {
+      token = null;
+    },
+
+    isAuthenticated() {
+      return token !== null;
+    },
+
+    getRequest(endpoint) {
+      return request(endpoint);
+    },
+  };
+})();
+
+// Uso
+await AuthModule.login("user@mail.com", "123456");
+console.log(AuthModule.isAuthenticated()); // true
+const profile = await AuthModule.getRequest("/profile");
+```
+
+---
+
+## 2. Singleton Pattern
+
+Garantiza que una clase tenga **una sola instancia**:
+
+```javascript
+class Database {
+  static #instance = null;
+  #connection = null;
+
+  constructor() {
+    if (Database.#instance) {
+      return Database.#instance;
+    }
+    Database.#instance = this;
+  }
+
+  connect(url) {
+    if (this.#connection) {
+      console.log("Ya conectado");
+      return this.#connection;
+    }
+    console.log(`Conectando a ${url}...`);
+    this.#connection = { url, connected: true };
+    return this.#connection;
+  }
+
+  static getInstance() {
+    if (!Database.#instance) {
+      Database.#instance = new Database();
+    }
+    return Database.#instance;
+  }
+}
+
+const db1 = Database.getInstance();
+const db2 = Database.getInstance();
+console.log(db1 === db2); // true — misma instancia
+
+// Versión funcional más simple
+const createSingleton = (factory) => {
+  let instance;
+  return () => {
+    if (!instance) instance = factory();
+    return instance;
+  };
+};
+
+const getLogger = createSingleton(() => ({
+  logs: [],
+  log(msg) { this.logs.push({ msg, time: Date.now() }); console.log(msg); },
+}));
+
+getLogger().log("Hola");
+getLogger().log("Mundo");
+console.log(getLogger().logs.length); // 2
+```
+
+---
+
+## 3. Observer Pattern (Pub/Sub)
+
+Permite que objetos **se suscriban** a eventos de otro objeto:
+
+```javascript
+class EventEmitter {
+  #listeners = new Map();
+
+  on(evento, callback) {
+    if (!this.#listeners.has(evento)) {
+      this.#listeners.set(evento, []);
+    }
+    this.#listeners.get(evento).push(callback);
+    // Retorna función para desuscribirse
+    return () => this.off(evento, callback);
+  }
+
+  off(evento, callback) {
+    const handlers = this.#listeners.get(evento);
+    if (handlers) {
+      this.#listeners.set(evento, handlers.filter(h => h !== callback));
+    }
+  }
+
+  emit(evento, ...datos) {
+    const handlers = this.#listeners.get(evento) || [];
+    handlers.forEach(handler => handler(...datos));
+  }
+
+  once(evento, callback) {
+    const wrapper = (...args) => {
+      callback(...args);
+      this.off(evento, wrapper);
+    };
+    this.on(evento, wrapper);
+  }
+}
+
+// Uso: sistema de notificaciones
+const bus = new EventEmitter();
+
+// Suscribirse
+const unsub = bus.on("usuario:login", (usuario) => {
+  console.log(`¡Bienvenido, ${usuario.nombre}!`);
+});
+
+bus.on("usuario:login", (usuario) => {
+  // Analytics, logging, etc.
+  console.log(`Login registrado: ${usuario.email}`);
+});
+
+// Emitir evento
+bus.emit("usuario:login", { nombre: "Samuel", email: "samuel@mail.com" });
+
+// Desuscribirse
+unsub();
+```
+
+---
+
+## 4. Factory Pattern
+
+Crea objetos sin exponer la lógica de creación:
+
+```javascript
+class Notification {
+  constructor(type, message, options = {}) {
+    this.type = type;
+    this.message = message;
+    this.timestamp = Date.now();
+    this.options = options;
+  }
+
+  show() {
+    const icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
+    console.log(`${icons[this.type]} ${this.message}`);
+  }
+}
+
+// Factory
+class NotificationFactory {
+  static create(type, message, options) {
+    switch (type) {
+      case "success":
+        return new Notification(type, message, { duration: 3000, ...options });
+      case "error":
+        return new Notification(type, message, { duration: 0, closable: true, ...options });
+      case "warning":
+        return new Notification(type, message, { duration: 5000, ...options });
+      default:
+        return new Notification("info", message, { duration: 4000, ...options });
+    }
+  }
+}
+
+// Uso
+const notif = NotificationFactory.create("success", "¡Guardado!");
+notif.show(); // ✅ ¡Guardado!
+
+const error = NotificationFactory.create("error", "Falló la conexión");
+error.show(); // ❌ Falló la conexión
+```
+
+---
+
+## 5. Middleware Pattern
+
+Cadena de funciones que procesan datos secuencialmente (usado en Express, Redux):
+
+```javascript
+class Pipeline {
+  #middlewares = [];
+
+  use(fn) {
+    this.#middlewares.push(fn);
+    return this; // Permite encadenar
+  }
+
+  async execute(context) {
+    let index = 0;
+
+    const next = async () => {
+      if (index < this.#middlewares.length) {
+        const middleware = this.#middlewares[index++];
+        await middleware(context, next);
+      }
+    };
+
+    await next();
+    return context;
+  }
+}
+
+// Uso: pipeline de procesamiento de request
+const api = new Pipeline();
+
+// Middleware: logging
+api.use(async (ctx, next) => {
+  console.log(`→ ${ctx.method} ${ctx.url}`);
+  const start = Date.now();
+  await next();
+  console.log(`← ${ctx.status} (${Date.now() - start}ms)`);
+});
+
+// Middleware: autenticación
+api.use(async (ctx, next) => {
+  if (!ctx.token) {
+    ctx.status = 401;
+    ctx.body = "No autorizado";
+    return; // No llama next() — corta la cadena
+  }
+  ctx.user = { id: 1, nombre: "Samuel" };
+  await next();
+});
+
+// Middleware: handler
+api.use(async (ctx, next) => {
+  ctx.status = 200;
+  ctx.body = `Hola, ${ctx.user.nombre}`;
+  await next();
+});
+
+// Ejecutar
+const resultado = await api.execute({
+  method: "GET",
+  url: "/profile",
+  token: "abc123",
+});
+console.log(resultado.body); // "Hola, Samuel"
+```
+
+---
+
+## 6. Strategy Pattern
+
+Seleccionar un algoritmo en tiempo de ejecución:
+
+```javascript
+// Estrategias de descuento
+const discountStrategies = {
+  regular: (precio) => precio,
+  premium: (precio) => precio * 0.9,    // 10% off
+  vip: (precio) => precio * 0.8,        // 20% off
+  empleado: (precio) => precio * 0.5,   // 50% off
+};
+
+function calcularPrecio(precio, tipoCliente) {
+  const strategy = discountStrategies[tipoCliente] ?? discountStrategies.regular;
+  return strategy(precio);
+}
+
+console.log(calcularPrecio(100, "vip"));      // 80
+console.log(calcularPrecio(100, "empleado")); // 50
+console.log(calcularPrecio(100, "regular"));  // 100
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — EventEmitter
+Crea un sistema de carrito de compras que use el Observer pattern. Al agregar/eliminar productos, emite eventos y un componente "total" se actualiza automáticamente.
+
+### Ejercicio 2 — Factory
+Crea un `FormFieldFactory` que genere diferentes tipos de campos de formulario (`text`, `select`, `checkbox`) con su configuración apropiada.
+
+### Ejercicio 3 — Middleware
+Crea un pipeline de validación de datos que pase por: sanitización → validación → transformación. Cada paso puede detener la cadena si hay error.
+
+### Ejercicio 4 — Strategy
+Implementa un sistema de ordenamiento que acepte diferentes estrategias: por nombre, por precio, por fecha, por popularidad.
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+const carrito = new EventEmitter();
+const items = [];
+
+carrito.on("item:agregado", (item) => {
+  items.push(item);
+  const total = items.reduce((sum, i) => sum + i.precio, 0);
+  console.log(`🛒 +${item.nombre} | Total: $${total}`);
+});
+
+carrito.on("item:eliminado", (index) => {
+  const eliminado = items.splice(index, 1)[0];
+  const total = items.reduce((sum, i) => sum + i.precio, 0);
+  console.log(`🗑️ -${eliminado.nombre} | Total: $${total}`);
+});
+
+carrito.emit("item:agregado", { nombre: "Laptop", precio: 15000 });
+carrito.emit("item:agregado", { nombre: "Mouse", precio: 350 });
+carrito.emit("item:eliminado", 1);
+```
+
+#### Ejercicio 2
+```javascript
+class FormFieldFactory {
+  static create(type, config) {
+    const defaults = {
+      text: { tag: "input", attrs: { type: "text" }, required: false },
+      select: { tag: "select", options: [], required: false },
+      checkbox: { tag: "input", attrs: { type: "checkbox" }, checked: false },
+    };
+
+    const base = defaults[type];
+    if (!base) throw new Error(`Tipo "${type}" no soportado`);
+    return { ...base, ...config, fieldType: type };
+  }
+}
+
+const nombre = FormFieldFactory.create("text", {
+  label: "Nombre", required: true
+});
+const pais = FormFieldFactory.create("select", {
+  label: "País", options: ["MX", "CO", "AR"]
+});
+```
+
+#### Ejercicio 3
+```javascript
+const validationPipeline = new Pipeline();
+
+validationPipeline
+  .use(async (ctx, next) => {
+    // Sanitización
+    ctx.data.email = ctx.data.email?.trim().toLowerCase();
+    ctx.data.nombre = ctx.data.nombre?.trim();
+    await next();
+  })
+  .use(async (ctx, next) => {
+    // Validación
+    if (!ctx.data.email?.includes("@")) {
+      ctx.error = "Email inválido";
+      return;
+    }
+    await next();
+  })
+  .use(async (ctx, next) => {
+    // Transformación
+    ctx.data.createdAt = new Date().toISOString();
+    ctx.data.id = crypto.randomUUID();
+    await next();
+  });
+
+const result = await validationPipeline.execute({
+  data: { email: "  USER@Mail.COM  ", nombre: " Samuel " },
+});
+console.log(result.data);
+```
+
+#### Ejercicio 4
+```javascript
+const sortStrategies = {
+  nombre: (a, b) => a.nombre.localeCompare(b.nombre),
+  precio: (a, b) => a.precio - b.precio,
+  precioDesc: (a, b) => b.precio - a.precio,
+  fecha: (a, b) => new Date(a.fecha) - new Date(b.fecha),
+};
+
+function ordenar(items, estrategia = "nombre") {
+  const fn = sortStrategies[estrategia];
+  if (!fn) throw new Error(`Estrategia "${estrategia}" no existe`);
+  return [...items].sort(fn);
+}
+
+const productos = [
+  { nombre: "C", precio: 300, fecha: "2024-03-01" },
+  { nombre: "A", precio: 100, fecha: "2024-01-15" },
+  { nombre: "B", precio: 200, fecha: "2024-02-10" },
+];
+
+console.log(ordenar(productos, "precio"));
+console.log(ordenar(productos, "nombre"));
+```
+
+</details>

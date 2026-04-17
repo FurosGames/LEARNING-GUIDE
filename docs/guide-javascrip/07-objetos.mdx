@@ -1,0 +1,340 @@
+---
+sidebar_position: 7
+title: "Objetos"
+---
+
+# 🏗️ Objetos
+
+Los objetos son **colecciones de propiedades** (pares clave-valor). Son la base de casi todo en JavaScript.
+
+---
+
+## Crear objetos
+
+```javascript
+// Objeto literal (lo más usado)
+const persona = {
+  nombre: "Samuel",
+  edad: 25,
+  esDesarrollador: true,
+  saludar() {
+    return `Hola, soy ${this.nombre}`;
+  },
+};
+
+// Acceso con punto
+console.log(persona.nombre); // "Samuel"
+
+// Acceso con corchetes (para claves dinámicas)
+console.log(persona["edad"]); // 25
+
+const key = "nombre";
+console.log(persona[key]); // "Samuel"
+```
+
+---
+
+## Shorthand properties y métodos
+
+```javascript
+const nombre = "Samuel";
+const edad = 25;
+
+// Sin shorthand
+const obj1 = { nombre: nombre, edad: edad };
+
+// Con shorthand ✅
+const obj2 = { nombre, edad };
+
+// Shorthand de métodos
+const obj3 = {
+  // Antes
+  saludar: function () { return "Hola"; },
+  // Ahora ✅
+  saludar() { return "Hola"; },
+};
+```
+
+---
+
+## Propiedades computadas
+
+```javascript
+const campo = "email";
+const prefijo = "user";
+
+const usuario = {
+  nombre: "Samuel",
+  [campo]: "samuel@mail.com",           // email: "samuel@mail.com"
+  [`${prefijo}Id`]: 12345,              // userId: 12345
+  [`get${campo.charAt(0).toUpperCase() + campo.slice(1)}`]() {
+    return this.email;
+  },
+};
+
+console.log(usuario.email);       // "samuel@mail.com"
+console.log(usuario.userId);      // 12345
+console.log(usuario.getEmail());  // "samuel@mail.com"
+```
+
+---
+
+## Destructuring de objetos
+
+```javascript
+const usuario = {
+  nombre: "Samuel",
+  edad: 25,
+  ciudad: "CDMX",
+  pais: "México",
+};
+
+// Básico
+const { nombre, edad } = usuario;
+console.log(nombre, edad); // "Samuel" 25
+
+// Renombrar variables
+const { nombre: userName, edad: userAge } = usuario;
+console.log(userName); // "Samuel"
+
+// Valores por defecto
+const { profesion = "Desconocida" } = usuario;
+console.log(profesion); // "Desconocida"
+
+// Rest
+const { nombre: n, ...resto } = usuario;
+console.log(resto); // { edad: 25, ciudad: "CDMX", pais: "México" }
+
+// Destructuring anidado
+const config = {
+  servidor: {
+    puerto: 3000,
+    host: "localhost",
+  },
+  db: {
+    nombre: "miApp",
+  },
+};
+
+const { servidor: { puerto, host } } = config;
+console.log(puerto, host); // 3000 "localhost"
+```
+
+---
+
+## Spread operator con objetos
+
+```javascript
+const base = { tema: "dark", idioma: "es" };
+const extra = { fontSize: 14, tema: "light" };
+
+// Combinar objetos (el último gana en propiedades repetidas)
+const config = { ...base, ...extra };
+console.log(config); // { tema: "light", idioma: "es", fontSize: 14 }
+
+// Clonar (shallow copy)
+const copia = { ...base };
+
+// Agregar/sobrescribir propiedades
+const actualizado = { ...base, idioma: "en", nuevaProp: true };
+```
+
+---
+
+## Métodos de Object
+
+```javascript
+const persona = { nombre: "Samuel", edad: 25, ciudad: "CDMX" };
+
+// Object.keys() — Array de claves
+console.log(Object.keys(persona));
+// ["nombre", "edad", "ciudad"]
+
+// Object.values() — Array de valores
+console.log(Object.values(persona));
+// ["Samuel", 25, "CDMX"]
+
+// Object.entries() — Array de pares [clave, valor]
+console.log(Object.entries(persona));
+// [["nombre", "Samuel"], ["edad", 25], ["ciudad", "CDMX"]]
+
+// Iterar con entries
+for (const [key, value] of Object.entries(persona)) {
+  console.log(`${key}: ${value}`);
+}
+
+// Object.fromEntries() — Inverso de entries
+const pares = [["a", 1], ["b", 2]];
+const obj = Object.fromEntries(pares);
+console.log(obj); // { a: 1, b: 2 }
+
+// Object.assign() — Copiar/mezclar (alternativa a spread)
+const merged = Object.assign({}, base, extra);
+
+// Object.freeze() — Inmutable (no se puede modificar)
+const constante = Object.freeze({ PI: 3.14159 });
+constante.PI = 3; // ❌ Silenciosamente ignorado (o error en strict mode)
+
+// Object.keys().length — Contar propiedades
+console.log(Object.keys(persona).length); // 3
+```
+
+---
+
+## Verificar propiedades
+
+```javascript
+const usuario = { nombre: "Samuel", edad: 25 };
+
+// Operador "in"
+console.log("nombre" in usuario); // true
+console.log("email" in usuario);  // false
+
+// hasOwnProperty
+console.log(usuario.hasOwnProperty("nombre")); // true
+
+// Object.hasOwn() (ES2022) ✅
+console.log(Object.hasOwn(usuario, "nombre")); // true
+```
+
+---
+
+## Objetos anidados y acceso seguro
+
+```javascript
+const empresa = {
+  nombre: "TechCo",
+  empleados: [
+    {
+      nombre: "Ana",
+      departamento: { nombre: "IT", piso: 3 },
+    },
+    {
+      nombre: "Luis",
+      departamento: { nombre: "HR", piso: 1 },
+    },
+  ],
+};
+
+// Acceso profundo
+console.log(empresa.empleados[0].departamento.nombre); // "IT"
+
+// Acceso seguro con optional chaining
+console.log(empresa.empleados[5]?.departamento?.nombre); // undefined
+
+// Transformar con map
+const deptos = empresa.empleados.map(e => e.departamento.nombre);
+console.log(deptos); // ["IT", "HR"]
+```
+
+---
+
+## Comparación de objetos
+
+```javascript
+// ⚠️ Los objetos se comparan por REFERENCIA, no por valor
+const a = { x: 1 };
+const b = { x: 1 };
+const c = a;
+
+console.log(a === b); // false (diferentes referencias)
+console.log(a === c); // true (misma referencia)
+
+// Para comparar por valor, usa JSON.stringify o una función recursiva
+console.log(JSON.stringify(a) === JSON.stringify(b)); // true (simple)
+
+// structuredClone para clonar profundamente (ES2022)
+const original = { a: 1, b: { c: 2 } };
+const clon = structuredClone(original);
+clon.b.c = 99;
+console.log(original.b.c); // 2 (no afectado ✅)
+```
+
+---
+
+## 🏋️ Ejercicios
+
+### Ejercicio 1 — Destructuring
+Dado el objeto `{ nombre: "Ana", edad: 28, email: "ana@mail.com", pais: "Colombia" }`, usa destructuring para extraer `nombre` y `email`, y agrupa el resto en una variable `info`.
+
+### Ejercicio 2 — Merge de configs
+Crea una función `mergeConfig(defaults, custom)` que combine dos objetos de configuración donde `custom` tiene prioridad.
+
+### Ejercicio 3 — Object.entries + reduce
+Dado un objeto de precios `{ manzana: 10, pera: 15, uva: 20 }`, usa `Object.entries()` y `reduce` para calcular el precio total.
+
+### Ejercicio 4 — Transformar estructura
+Dado un array de pares `[["nombre", "Samuel"], ["edad", 25], ["lang", "JS"]]`, conviértelo a un objeto usando `Object.fromEntries()`.
+
+### Ejercicio 5 — Inventario
+Crea un objeto `inventario` con 3 productos (nombre, precio, stock). Escribe funciones para:
+1. Listar todos los productos
+2. Encontrar el producto más caro
+3. Calcular el valor total del inventario (precio × stock de cada uno)
+
+---
+
+<details>
+<summary>✅ **Soluciones**</summary>
+
+#### Ejercicio 1
+```javascript
+const usuario = { nombre: "Ana", edad: 28, email: "ana@mail.com", pais: "Colombia" };
+const { nombre, email, ...info } = usuario;
+
+console.log(nombre); // "Ana"
+console.log(email);  // "ana@mail.com"
+console.log(info);   // { edad: 28, pais: "Colombia" }
+```
+
+#### Ejercicio 2
+```javascript
+function mergeConfig(defaults, custom) {
+  return { ...defaults, ...custom };
+}
+
+const resultado = mergeConfig(
+  { tema: "dark", idioma: "es", fontSize: 14 },
+  { tema: "light", fontSize: 16 }
+);
+console.log(resultado); // { tema: "light", idioma: "es", fontSize: 16 }
+```
+
+#### Ejercicio 3
+```javascript
+const precios = { manzana: 10, pera: 15, uva: 20 };
+
+const total = Object.entries(precios)
+  .reduce((sum, [, precio]) => sum + precio, 0);
+
+console.log(`Total: $${total}`); // $45
+```
+
+#### Ejercicio 4
+```javascript
+const pares = [["nombre", "Samuel"], ["edad", 25], ["lang", "JS"]];
+const objeto = Object.fromEntries(pares);
+console.log(objeto); // { nombre: "Samuel", edad: 25, lang: "JS" }
+```
+
+#### Ejercicio 5
+```javascript
+const inventario = [
+  { nombre: "Laptop", precio: 15000, stock: 5 },
+  { nombre: "Mouse", precio: 350, stock: 20 },
+  { nombre: "Monitor", precio: 8000, stock: 8 },
+];
+
+// 1. Listar
+inventario.forEach(p => console.log(`${p.nombre}: $${p.precio} (${p.stock} uds)`));
+
+// 2. Más caro
+const masCaro = inventario.reduce((max, p) => p.precio > max.precio ? p : max);
+console.log(`Más caro: ${masCaro.nombre}`); // "Laptop"
+
+// 3. Valor total
+const valorTotal = inventario.reduce((sum, p) => sum + p.precio * p.stock, 0);
+console.log(`Valor total: $${valorTotal}`); // $145000
+```
+
+</details>
